@@ -728,3 +728,5 @@ def main_app():
                 
                 # BETUL:
                 if ce_btn1.button("💾 Simpan Perubahan", type="primary", key=f"btn_save_edit_{trx_id}"):
+                    thn_e = e_tarikh.strftime("%Y")
+                    bln_e = e_tarikh.strftime("%Y-%m")
