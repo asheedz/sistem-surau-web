@@ -9,113 +9,14 @@ import base64
 import streamlit.components.v1 as components
 
 # =========================================================================
-# KONFIGURASI LAMAN (RESPONSIF MOBILE / DESKTOP)
+# KONFIGURASI LAMAN (PAGE CONFIG)
 # =========================================================================
 st.set_page_config(
     page_title="Sistem Kewangan Surau",
     page_icon="🕌",
     layout="wide",
-    initial_sidebar_state="auto"
+    initial_sidebar_state="expanded"
 )
-
-# =========================================================================
-# GAYA RESPONSIF KHAS UNTUK MOBILE (HANDPHONE) & TABLET
-# =========================================================================
-def inject_responsive_css():
-    st.markdown("""
-        <style>
-        /* 1. Pengoptimuman Ruang Paparan Utama untuk Skrin Telefon (< 768px) */
-        @media (max-width: 768px) {
-            .main .block-container {
-                padding-top: 1.2rem !important;
-                padding-bottom: 2rem !important;
-                padding-left: 0.8rem !important;
-                padding-right: 0.8rem !important;
-            }
-            
-            /* Sembunyikan kolum kosong penjarak di telefon */
-            div[data-testid="column"]:empty {
-                display: none !important;
-            }
-
-            /* Kolum borang disusun menegak (stacking) di skrin kecil */
-            div[data-testid="stHorizontalBlock"] {
-                flex-wrap: wrap !important;
-                gap: 0.5rem !important;
-            }
-            div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-                min-width: 100% !important;
-                flex: 1 1 100% !important;
-            }
-
-            /* Butang sentuh lebih besar dan mesra jari (Touch Target >= 46px) */
-            div[data-testid="stButton"] button {
-                width: 100% !important;
-                min-height: 46px !important;
-                font-size: 15px !important;
-                border-radius: 8px !important;
-                margin: 4px 0 !important;
-            }
-
-            /* Cegah Safari iOS daripada auto-zoom bila menaip (font >= 16px) */
-            input, select, textarea {
-                font-size: 16px !important;
-            }
-
-            /* Kad Metrik Papan Pemuka tersusun kemas */
-            div[data-testid="metric-container"] {
-                padding: 12px 14px !important;
-                background-color: #ffffff !important;
-                border: 1px solid #e0e0e0 !important;
-                border-radius: 10px !important;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
-                margin-bottom: 8px !important;
-            }
-            div[data-testid="stMetricValue"] {
-                font-size: 1.35rem !important;
-                word-break: break-word !important;
-            }
-            div[data-testid="stMetricLabel"] {
-                font-size: 0.82rem !important;
-                font-weight: 600 !important;
-            }
-
-            /* Menu Tab boleh dileret ke tepi (Swipeable Carousel) */
-            div[data-baseweb="tab-list"] {
-                overflow-x: auto !important;
-                flex-wrap: nowrap !important;
-                scrollbar-width: thin !important;
-                gap: 5px !important;
-                padding-bottom: 4px !important;
-            }
-            button[data-baseweb="tab"] {
-                padding: 8px 14px !important;
-                font-size: 13.5px !important;
-                white-space: nowrap !important;
-            }
-
-            /* Jadual Data (Dataframe) boleh diskrol secara mendatar */
-            div[data-testid="stDataFrame"] {
-                width: 100% !important;
-                overflow-x: auto !important;
-            }
-        }
-
-        /* 2. Pengoptimuman untuk Tablet (769px - 1024px) */
-        @media (min-width: 769px) and (max-width: 1024px) {
-            .main .block-container {
-                padding-left: 1.5rem !important;
-                padding-right: 1.5rem !important;
-            }
-            div[data-testid="metric-container"] {
-                padding: 10px 12px !important;
-            }
-            div[data-testid="stMetricValue"] {
-                font-size: 1.3rem !important;
-            }
-        }
-        </style>
-    """, unsafe_allow_html=True)
 
 # =========================================================================
 # FUNGSI CRYPTOGRAPHY & DATABASE
@@ -141,6 +42,7 @@ def init_db():
         status TEXT NOT NULL DEFAULT 'Aktif'
     )""")
     
+    # Periksa dan buat migrasi jika kolum no_telefon atau status belum wujud
     c.execute("PRAGMA table_info(users)")
     cols = [col[1] for col in c.fetchall()]
     if 'no_telefon' not in cols:
@@ -341,60 +243,87 @@ def show_printable_html(html_content, file_name="dokumen.html", button_label="�
         components.html(html_content, height=650, scrolling=True)
 
 # =========================================================================
-# HALAMAN LOG MASUK (RESPONSIF MOBILE / DESKTOP)
+# HALAMAN LOG MASUK (LOGIN PAGE DENGAN KAD ELEGAN)
+# =========================================================================
+# =========================================================================
+# HALAMAN LOG MASUK (LOGIN PAGE DENGAN KAWALAN WARNA PENUH)
 # =========================================================================
 def login_page():
-    inject_responsive_css()
-    st.markdown("""
+    # -------------------------------------------------------------
+    # TETAPAN WARNA (Ubah kod HEX di bawah mengikut citarasa anda)
+    # -------------------------------------------------------------
+    WARNA_BG_LUAR = "linear-gradient(135deg, #0e2716 0%, #1E4C2B 50%, #14341E 100%)" # Kecerunan hijau
+    WARNA_KAD_FORM = "#ffffff"     # Warna kotak form (Putih)
+    WARNA_TEKS_LABEL = "#ffffff"   # Warna tulisan label (Hijau pekat / gelap)
+    WARNA_INPUT_BG = "#f4f6f4"     # Latar kotak tempat menaip
+    WARNA_INPUT_TEKS = "#000000"   # Tulisan semasa pengguna menaip (Hitam)
+    WARNA_BORDER_INPUT = "#c2d1c5" # Garisan keliling kotak input
+    
+    st.markdown(f"""
         <style>
-        .stApp {
-            background: linear-gradient(135deg, #0e2716 0%, #1E4C2B 50%, #14341E 100%) !important;
-        }
-        .login-box {
-            background-color: #ffffff !important;
-            padding: 35px 28px;
-            border-radius: 14px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.35);
-            text-align: center;
-            max-width: 450px;
-            margin: auto;
-        }
+        /* 1. Latar Belakang Keseluruhan Laman */
+        .stApp {{
+            background: {WARNA_BG_LUAR} !important;
+        }}
+        
+        /* 2. Bekas Kad Borang Log Masuk */
+        .login-card-container {{
+            background-color: {WARNA_KAD_FORM} !important;
+            padding: 35px 30px;
+            border-radius: 15px;
+            box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.45);
+            margin-top: 25px;
+        }}
+        
+        /* 3. Paksa Warna Tulisan Label (Username & Password) Sentiasa Jelas */
         div[data-testid="stTextInput"] label,
-        div[data-testid="stTextInput"] label p {
-            color: #1a3821 !important;
+        div[data-testid="stTextInput"] label p {{
+            color: {WARNA_TEKS_LABEL} !important;
             font-size: 14px !important;
             font-weight: 700 !important;
-        }
-        div[data-testid="stTextInput"] input {
-            color: #000000 !important;
-            background-color: #f7faf7 !important;
-            border: 1.5px solid #c2d1c5 !important;
+        }}
+        
+        /* 4. Kotak Ruang Menaip (Input Field) */
+        div[data-testid="stTextInput"] input {{
+            color: {WARNA_INPUT_TEKS} !important;
+            background-color: {WARNA_INPUT_BG} !important;
+            border: 1.5px solid {WARNA_BORDER_INPUT} !important;
             border-radius: 8px !important;
-            font-size: 16px !important;
-        }
-        @media (max-width: 768px) {
-            .login-box {
-                padding: 24px 16px !important;
-                max-width: 100% !important;
-                width: 100% !important;
-                border-radius: 12px !important;
-                margin-top: 5px !important;
-            }
-        }
+            font-size: 14px !important;
+        }}
+        
+        /* 5. Warna Kotak Semasa Klik (Focus) */
+        div[data-testid="stTextInput"] input:focus {{
+            border-color: #1E4C2B !important;
+            box-shadow: 0 0 8px rgba(30, 76, 43, 0.3) !important;
+        }}
+
+        /* 6. Butang Log Masuk Utama */
+        div[data-testid="stButton"] button[kind="primary"] {{
+            background-color: #1E4C2B !important;
+            color: #ffffff !important;
+            border-radius: 8px !important;
+            font-weight: bold !important;
+            border: none !important;
+        }}
+        div[data-testid="stButton"] button[kind="primary"]:hover {{
+            background-color: #14341E !important;
+        }}
         </style>
     """, unsafe_allow_html=True)
     
-    col1, col2, col3 = st.columns([1, 1.2, 1])
+    col1, col2, col3 = st.columns([1, 1.25, 1])
     with col2:
-        st.markdown('<div class="login-box">', unsafe_allow_html=True)
-        st.markdown("<h1 style='color: #1E4C2B; margin-bottom: 0;'>🕌</h1>", unsafe_allow_html=True)
-        st.markdown(f"<h2 style='color: #1E4C2B; margin-top: 5px;'>{get_nama_surau().upper()}</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #666; font-size: 13px;'>Sistem Perakaunan & Integriti Tunai Komuniti (Versi Web)</p>", unsafe_allow_html=True)
-        st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
+        st.markdown('<div class="login-card-container">', unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center; color: #D4AF37; margin-bottom: 0;'>🕌</h1>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style='text-align: center; color: #D4AF37; margin-top: 5px; font-weight: 800;'>{get_nama_surau().upper()}</h3>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #D4AF37; font-size: 13px; margin-bottom: 20px;'>Sistem Pengurusan Kewangan Surau Versi 1.o</p>", unsafe_allow_html=True)
+        st.markdown("<hr style='border: 0; border-top: 1px solid #e0e0e0; margin-bottom: 20px;'>", unsafe_allow_html=True)
         
-        username = st.text_input("Nama Pengguna (Username)", placeholder="Contoh: admin / bendahari")
-        password = st.text_input("Kata Laluan (Password)", type="password", placeholder="••••••••")
+        username = st.text_input("Nama Pengguna (Username)", placeholder="Masukkan username...")
+        password = st.text_input("Kata Laluan (Password)", type="password", placeholder="Masukkan kata laluan...")
         
+        st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
         if st.button("🔓 LOG MASUK SEKARANG", use_container_width=True, type="primary"):
             if username and password:
                 conn = get_db_connection()
@@ -426,14 +355,12 @@ def login_page():
             else:
                 st.warning("Sila masukkan username dan kata laluan.")
                 
-        st.markdown("<br><p style='font-size: 11px; color: #888;'>Akaun Lalai Sistem:<br><b>admin</b> (admin123) | <b>bendahari</b> (benda123) | <b>pengerusi</b> (pengerusi123)</p>", unsafe_allow_html=True)
+        st.markdown("<br><p style='font-size: 11px; color: #777777; text-align: center;'>Akaun Lalai: <b>admin</b> (admin123) | <b>bendahari</b> (benda123) | <b>pengerusi</b> (pengerusi123)</p>", unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
-
 # =========================================================================
 # HALAMAN UTAMA (MAIN APP)
 # =========================================================================
 def main_app():
-    inject_responsive_css()
     user = st.session_state['user_info']
     nama_surau = get_nama_surau()
     
@@ -468,8 +395,13 @@ def main_app():
                 st.success("Kata laluan berjaya ditukar!")
             else:
                 st.warning("Kata laluan mestilah sekurang-kurangnya 4 aksara.")
-
-    # Ubah Nama Surau (Khusus untuk Admin)
+                
+    if st.sidebar.button("🚪 Log Keluar", use_container_width=True, type="secondary"):
+        log_audit(user["nama_penuh"], "LOG KELUAR", f"Pengguna log keluar.")
+        st.session_state['logged_in'] = False
+        st.session_state['user_info'] = None
+        st.rerun()
+        # Ubah Nama Surau (Khusus untuk Admin)
     if user['is_admin']:
         with st.sidebar.expander("🕌 Ubah Nama Surau"):
             nama_semasa = get_nama_surau()
@@ -486,12 +418,6 @@ def main_app():
                     st.rerun()
                 else:
                     st.warning("Nama surau tidak boleh dibiarkan kosong.")
-
-    if st.sidebar.button("🚪 Log Keluar", use_container_width=True, type="secondary"):
-        log_audit(user["nama_penuh"], "LOG KELUAR", f"Pengguna log keluar.")
-        st.session_state['logged_in'] = False
-        st.session_state['user_info'] = None
-        st.rerun()
 
     # ---------------------------------------------------------------------
     # 1. PAPAN PEMUKA & CARTA
@@ -578,7 +504,6 @@ def main_app():
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Penyata Papan Pemuka - {period}</title>
     <style>
         body {{ font-family: 'Segoe UI', Arial, sans-serif; padding: 25px; background: #fff; color: #222; }}
@@ -589,13 +514,6 @@ def main_app():
         .sign {{ display: flex; justify-content: space-between; margin-top: 60px; }}
         .sign-box {{ width: 28%; text-align: center; border-top: 1px solid #000; padding-top: 5px; font-weight: bold; font-size: 13px; }}
         @media print {{ .btn {{ display: none; }} body {{ padding: 0; }} }}
-        @media (max-width: 768px) {{
-            body {{ padding: 12px !important; }}
-            .cards {{ display: block !important; }}
-            .card {{ width: 100% !important; margin-bottom: 10px !important; }}
-            .sign {{ display: block !important; margin-top: 30px !important; }}
-            .sign-box {{ width: 100% !important; margin-bottom: 25px !important; }}
-        }}
     </style>
 </head>
 <body>
@@ -647,10 +565,10 @@ def main_app():
                 t_tarikh = c1.date_input("Tarikh Urusniaga", datetime.now(), key="t_tarikh_input")
                 t_jenis = c2.selectbox("Jenis Urusniaga", ["Penerimaan (Masuk)", "Perbelanjaan (Keluar)"], key="t_jenis_input")
                 
-                # Kueri kategori mengikut jenis secara reaktif dengan key berasingan
+                # Kueri kategori mengikut jenis yang dipilih secara reaktif/dinamik
                 df_kat = pd.read_sql_query("SELECT nama FROM kategori WHERE jenis = ? ORDER BY nama ASC", conn, params=(t_jenis,))
                 kategori_opts = df_kat['nama'].tolist() if not df_kat.empty else ["Lain-lain"]
-                t_kat = c3.selectbox("Kategori Urusniaga", kategori_opts, key=f"t_kat_input_{t_jenis}")
+                t_kat = c3.selectbox("Kategori Urusniaga", kategori_opts, key="t_kat_input")
                 
                 t_butiran = st.text_input("Butiran / Keterangan Urusniaga", key="t_butiran_input")
                 t_amaun = st.number_input("Amaun (RM)", min_value=0.0, step=10.0, format="%.2f", key="t_amaun_input")
@@ -676,6 +594,7 @@ def main_app():
                             conn.commit()
                             log_audit(user["nama_penuh"], "TAMBAH TRANSAKSI", f"{t_jenis} | RM{t_amaun:,.2f} | {t_kat} | {t_butiran}")
                             st.success("Urusniaga berjaya direkodkan!")
+                            # Reset input fields
                             if 't_butiran_input' in st.session_state:
                                 del st.session_state['t_butiran_input']
                             if 't_amaun_input' in st.session_state:
@@ -698,7 +617,7 @@ def main_app():
                 df_e_kat = pd.read_sql_query("SELECT nama FROM kategori WHERE jenis = ? ORDER BY nama ASC", conn, params=(e_jenis,))
                 e_kats = df_e_kat['nama'].tolist() if not df_e_kat.empty else [e_row[2]]
                 cat_idx = e_kats.index(e_row[2]) if e_row[2] in e_kats else 0
-                e_kat = c_e3.selectbox("Kategori", e_kats, index=cat_idx, key=f"e_kat_{trx_id}_{e_jenis}")
+                e_kat = c_e3.selectbox("Kategori", e_kats, index=cat_idx, key=f"e_kat_{trx_id}")
                 
                 e_butiran = st.text_input("Butiran", value=e_row[3], key=f"e_butiran_{trx_id}")
                 e_amaun = st.number_input("Amaun (RM)", min_value=0.01, value=float(e_row[4]), step=10.0, format="%.2f", key=f"e_amaun_{trx_id}")
@@ -766,7 +685,6 @@ def main_app():
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Baucar Bayaran PV-{pv_id:04d}</title>
     <style>
         body {{ font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; background: #fafafa; }}
@@ -784,14 +702,6 @@ def main_app():
         .sign-box {{ width: 30%; text-align: center; }}
         .sign-line {{ border-top: 1px solid #333; margin-top: 55px; padding-top: 5px; font-weight: bold; font-size: 13px; }}
         @media print {{ .btn {{ display: none; }} body {{ padding: 0; }} .box {{ border: 2px solid #000; }} }}
-        @media (max-width: 768px) {{
-            body {{ padding: 10px !important; }}
-            .box {{ padding: 15px !important; border-width: 1px !important; }}
-            .signatures {{ display: block !important; margin-top: 25px !important; }}
-            .sign-box {{ width: 100% !important; margin-bottom: 20px !important; }}
-            .sign-line {{ margin-top: 30px !important; }}
-            .info-table td {{ font-size: 13px !important; }}
-        }}
     </style>
 </head>
 <body>
@@ -932,7 +842,6 @@ def main_app():
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laporan Kewangan Bulanan - {sel_period}</title>
     <style>
         body {{ font-family: 'Segoe UI', Arial, sans-serif; padding: 25px; background: #fff; color: #222; }}
@@ -946,13 +855,6 @@ def main_app():
         .sign-area {{ display: flex; justify-content: space-between; margin-top: 50px; page-break-inside: avoid; }}
         .sign-box {{ width: 28%; text-align: center; border-top: 1px solid #000; padding-top: 5px; font-weight: bold; font-size: 13px; }}
         @media print {{ .btn {{ display: none; }} body {{ padding: 0; }} }}
-        @media (max-width: 768px) {{
-            body {{ padding: 12px !important; }}
-            .summary-grid {{ display: block !important; }}
-            .card {{ width: 100% !important; margin-bottom: 10px !important; }}
-            .sign-area {{ display: block !important; margin-top: 30px !important; }}
-            .sign-box {{ width: 100% !important; margin-bottom: 20px !important; }}
-        }}
     </style>
 </head>
 <body>
@@ -1023,7 +925,6 @@ def main_app():
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Penyata Kewangan Tahunan - {sel_year}</title>
     <style>
         body {{ font-family: 'Segoe UI', Arial, sans-serif; padding: 25px; background: #fff; color: #222; }}
@@ -1035,11 +936,6 @@ def main_app():
         .sign-area {{ display: flex; justify-content: space-between; margin-top: 60px; }}
         .sign-box {{ width: 28%; text-align: center; border-top: 1px solid #000; padding-top: 5px; font-weight: bold; font-size: 13px; }}
         @media print {{ .btn {{ display: none; }} body {{ padding: 0; }} }}
-        @media (max-width: 768px) {{
-            body {{ padding: 12px !important; }}
-            .sign-area {{ display: block !important; margin-top: 30px !important; }}
-            .sign-box {{ width: 100% !important; margin-bottom: 20px !important; }}
-        }}
     </style>
 </head>
 <body>
@@ -1107,15 +1003,17 @@ def main_app():
                     pilih_kat_label = st.selectbox("Pilih Kategori untuk Diubah:", list(kat_options.keys()))
                     
                     kat_id_edit, nama_kat_asal = kat_options[pilih_kat_label]
-                    nama_kat_baru = st.text_input("Nama Baharu Kategori:", value=nama_kat_asal, key=f"edit_kat_input_{kat_id_edit}")
+                    nama_kat_baru = st.text_input("Nama Baharu Kategori:", value=nama_kat_asal, key="edit_kat_input")
                     
                     st.caption("ℹ️ Nota: Menukar nama kategori akan mengemas kini semua transaksi lejar terdahulu secara automatik demi integriti data.")
                     
-                    if st.button("💾 Simpan Perubahan Nama Kategori", type="primary", key=f"btn_simpan_kat_{kat_id_edit}"):
+                    if st.button("💾 Simpan Perubahan Nama Kategori", type="primary"):
                         if nama_kat_baru.strip() and nama_kat_baru.strip() != nama_kat_asal:
                             try:
                                 c = conn.cursor()
+                                # Kemaskini nama kategori
                                 c.execute("UPDATE kategori SET nama = ? WHERE id = ?", (nama_kat_baru.strip(), kat_id_edit))
+                                # Penyelarasan automatik ke atas rekod lejar
                                 c.execute("UPDATE urusniaga SET kategori = ? WHERE kategori = ?", (nama_kat_baru.strip(), nama_kat_asal))
                                 conn.commit()
                                 log_audit(user["nama_penuh"], "KEMASKINI KATEGORI", f"Kategori '{nama_kat_asal}' ditukar ke '{nama_kat_baru.strip()}'")
@@ -1145,21 +1043,13 @@ def main_app():
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Senarai Kategori Kewangan</title>
     <style>
         body {{ font-family: 'Segoe UI', Arial, sans-serif; padding: 25px; }}
         table {{ width: 100%; border-collapse: collapse; font-size: 13px; }}
         th, td {{ border: 1px solid #333; padding: 7px 10px; }}
         th {{ background: #1E4C2B; color: white; }}
-        .cat-container {{ display: flex; justify-content: space-between; margin-top: 20px; }}
-        .cat-col {{ width: 48%; }}
         @media print {{ .btn {{ display: none; }} }}
-        @media (max-width: 768px) {{
-            body {{ padding: 12px; }}
-            .cat-container {{ display: block; }}
-            .cat-col {{ width: 100%; margin-bottom: 20px; }}
-        }}
     </style>
 </head>
 <body>
@@ -1167,12 +1057,12 @@ def main_app():
     <h2 style="color:#1E4C2B;text-align:center;margin-bottom:3px;">{nama_surau}</h2>
     <h3 style="text-align:center;margin-top:0;">CARTA KATEGORI PENERIMAAN (MASUK) & PERBELANJAAN (KELUAR)</h3>
     <div style="font-size:12px;margin-bottom:10px;">Tarikh Cetakan: {datetime.now().strftime("%d/%m/%Y %H:%M")}</div>
-    <div class="cat-container">
-        <div class="cat-col">
+    <div style="display:flex; justify-content:space-between; margin-top:20px;">
+        <div style="width:48%;">
             <h4 style="color:#274E13;margin-bottom:5px;">1. Kategori Penerimaan (Duit Masuk)</h4>
             <table><tr><th style="width:40px;">Bil</th><th>Nama Kategori Masuk</th></tr>{inc_html}</table>
         </div>
-        <div class="cat-col">
+        <div style="width:48%;">
             <h4 style="color:#990000;margin-bottom:5px;">2. Kategori Perbelanjaan (Duit Keluar)</h4>
             <table><tr><th style="width:40px;">Bil</th><th>Nama Kategori Keluar</th></tr>{exp_html}</table>
         </div>
@@ -1229,7 +1119,6 @@ def main_app():
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Senarai Pengguna & Pegawai</title>
     <style>
         body {{ font-family: 'Segoe UI', Arial, sans-serif; padding: 25px; }}
@@ -1237,10 +1126,6 @@ def main_app():
         th, td {{ border: 1px solid #333; padding: 8px 10px; }}
         th {{ background: #1E4C2B; color: white; }}
         @media print {{ .btn {{ display: none; }} }}
-        @media (max-width: 768px) {{
-            body {{ padding: 12px; }}
-            table {{ font-size: 12px; }}
-        }}
     </style>
 </head>
 <body>
@@ -1292,7 +1177,7 @@ def main_app():
                     pilih_user_label = st.selectbox("Pilih Pengguna untuk Dikemaskini:", list(u_map.keys()))
                     usr_data = u_map[pilih_user_label]
                     
-                    with st.form(f"form_update_user_{usr_data['id']}"):
+                    with st.form("form_update_user_status"):
                         col_eu1, col_eu2 = st.columns(2)
                         up_nama = col_eu1.text_input("Nama Penuh Pegawai", value=usr_data['nama_penuh'])
                         up_tel = col_eu2.text_input("No. Telefon", value=usr_data['no_telefon'] if usr_data['no_telefon'] != "Tiada" else "")
@@ -1300,6 +1185,7 @@ def main_app():
                         r_opts = get_senarai_jawatan()
                         up_role = col_eu1.selectbox("Jawatan / Peranan", r_opts, index=r_opts.index(usr_data['peranan']) if usr_data['peranan'] in r_opts else 0)
                         
+                        # Medan Status Aktif / Tidak Aktif
                         up_status = col_eu2.selectbox("Status Keahlian", ["Aktif", "Tidak Aktif"], index=0 if usr_data['status'] == 'Aktif' else 1)
                         st.caption("⚠️ Peringatan: Menetapkan status kepada 'Tidak Aktif' akan menghalang pengguna daripada log masuk ke sistem.")
                         
@@ -1319,8 +1205,8 @@ def main_app():
                     pilih_pwd_user = st.selectbox("Pilih Pengguna:", list(u_pwd_map.keys()), key="sel_pwd_u")
                     u_pwd_target = u_pwd_map[pilih_pwd_user]
                     
-                    new_pwd_input = st.text_input("Kata Laluan Baharu:", type="password", key=f"new_pwd_admin_{u_pwd_target['id']}")
-                    if st.button("Reset Kata Laluan Sekarang", type="primary", key=f"btn_reset_pwd_{u_pwd_target['id']}"):
+                    new_pwd_input = st.text_input("Kata Laluan Baharu:", type="password", key="new_pwd_admin_input")
+                    if st.button("Reset Kata Laluan Sekarang", type="primary"):
                         if new_pwd_input and len(new_pwd_input.strip()) >= 4:
                             c = conn.cursor()
                             c.execute("UPDATE users SET password_hash = ? WHERE id = ?", (hash_password(new_pwd_input.strip()), int(u_pwd_target['id'])))
@@ -1363,7 +1249,7 @@ def main_app():
                     sel_j_label = st.selectbox("Pilih Jawatan:", list(j_map.keys()))
                     j_target = j_map[sel_j_label]
                     
-                    with st.form(f"form_edit_jawatan_{j_target['id']}"):
+                    with st.form("form_edit_jawatan"):
                         ej_nama = st.text_input("Nama Jawatan:", value=j_target['nama_jawatan'])
                         ej_kuasa = st.checkbox("Boleh Mengubah & Merekod Data", value=bool(j_target['boleh_ubah_data'] == 1))
                         ej_desc = st.text_input("Keterangan Tugas:", value=j_target['keterangan'] or "")
@@ -1456,16 +1342,39 @@ def main_app():
                 conn.execute("VACUUM")
                 log_audit(user["nama_penuh"], "VACUUM DB", "Database dioptimumkan via Web.")
                 st.success("Pangkalan data telah dioptimumkan!")
-                
+        
         # Sub 6: Profil & Nama Surau
         with adm_t6:
             st.markdown("##### 🕌 Kemaskini Maklumat & Nama Rasmi Surau")
             c = conn.cursor()
             c.execute("SELECT nama_surau, alamat_surau FROM tetapan WHERE id = 1")
             row_tetapan = c.fetchone()
-            curr_nama = row_tetapan[0] if row_tetapan else "Surau An Najdah"
+            curr_nama = row_tetapan[0] if row_tetapan else "Surau Al-Muttaqin"
             curr_alamat = row_tetapan[1] if (row_tetapan and row_tetapan[1]) else ""
             
             with st.form("form_tetapan_surau"):
                 input_nama_surau = st.text_input("Nama Rasmi Surau:", value=curr_nama)
-                input_alamat = st.text_area("Alamat Surau (Pilihan):", value=curr
+                input_alamat = st.text_area("Alamat Surau (Pilihan):", value=curr_alamat)
+                
+                st.caption("ℹ️ Nota: Perubahan nama surau akan dikemas kini serta-merta pada tajuk sistem, resit, dan semua dokumen cetakan rasmi.")
+                
+                if st.form_submit_button("💾 Simpan Maklumat Surau", type="primary"):
+                    if input_nama_surau.strip():
+                        c.execute("UPDATE tetapan SET nama_surau = ?, alamat_surau = ? WHERE id = 1", 
+                                  (input_nama_surau.strip(), input_alamat.strip()))
+                        conn.commit()
+                        log_audit(user["nama_penuh"], "KEMASKINI TETAPAN", f"Nama surau ditukar kepada '{input_nama_surau.strip()}'")
+                        st.success(f"Nama surau berjaya dikemaskini kepada '{input_nama_surau.strip()}'!")
+                        st.rerun()
+                    else:
+                        st.error("Nama surau tidak boleh dibiarkan kosong!")
+                
+        conn.close()
+
+# =========================================================================
+# ROUTING APLIKASI
+# =========================================================================
+if st.session_state['logged_in']:
+    main_app()
+else:
+    login_page()
