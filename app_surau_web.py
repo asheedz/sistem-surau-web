@@ -254,7 +254,7 @@ def login_page():
     # -------------------------------------------------------------
     WARNA_BG_LUAR = "linear-gradient(135deg, #0e2716 0%, #1E4C2B 50%, #14341E 100%)" # Kecerunan hijau
     WARNA_KAD_FORM = "#ffffff"     # Warna kotak form (Putih)
-    WARNA_TEKS_LABEL = "#1a3821"   # Warna tulisan label (Hijau pekat / gelap)
+    WARNA_TEKS_LABEL = "#ffffff"   # Warna tulisan label (Hijau pekat / gelap)
     WARNA_INPUT_BG = "#f4f6f4"     # Latar kotak tempat menaip
     WARNA_INPUT_TEKS = "#000000"   # Tulisan semasa pengguna menaip (Hitam)
     WARNA_BORDER_INPUT = "#c2d1c5" # Garisan keliling kotak input
