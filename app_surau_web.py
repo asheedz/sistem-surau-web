@@ -726,5 +726,5 @@ def main_app():
                 e_butiran = st.text_input("Butiran", value=e_row[3], key=f"e_butiran_{trx_id}")
                 e_amaun = st.number_input("Amaun (RM)", min_value=0.01, value=float(e_row[4]), step=10.0, format="%.2f", key=f"e_amaun_{trx_id}")
                 
-                ce_btn1, ce_btn2 = st.columns(2)
-                if ce_btn1.button("💾 Simpan Per
+                # BETUL:
+                if ce_btn1.button("💾 Simpan Perubahan", type="primary", key=f"btn_save_edit_{trx_id}"):
