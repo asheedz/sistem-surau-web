@@ -245,35 +245,85 @@ def show_printable_html(html_content, file_name="dokumen.html", button_label="�
 # =========================================================================
 # HALAMAN LOG MASUK (LOGIN PAGE DENGAN KAD ELEGAN)
 # =========================================================================
+# =========================================================================
+# HALAMAN LOG MASUK (LOGIN PAGE DENGAN KAWALAN WARNA PENUH)
+# =========================================================================
 def login_page():
-    st.markdown("""
+    # -------------------------------------------------------------
+    # TETAPAN WARNA (Ubah kod HEX di bawah mengikut citarasa anda)
+    # -------------------------------------------------------------
+    WARNA_BG_LUAR = "linear-gradient(135deg, #0e2716 0%, #1E4C2B 50%, #14341E 100%)" # Kecerunan hijau
+    WARNA_KAD_FORM = "#ffffff"     # Warna kotak form (Putih)
+    WARNA_TEKS_LABEL = "#1a3821"   # Warna tulisan label (Hijau pekat / gelap)
+    WARNA_INPUT_BG = "#f4f6f4"     # Latar kotak tempat menaip
+    WARNA_INPUT_TEKS = "#000000"   # Tulisan semasa pengguna menaip (Hitam)
+    WARNA_BORDER_INPUT = "#c2d1c5" # Garisan keliling kotak input
+    
+    st.markdown(f"""
         <style>
-        .stApp {
-            background: linear-gradient(135deg, #0e2716 0%, #1E4C2B 50%, #14341E 100%);
-        }
-        .login-box {
-            background-color: #ffffff;
-            padding: 35px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            text-align: center;
-            max-width: 450px;
-            margin: auto;
-        }
+        /* 1. Latar Belakang Keseluruhan Laman */
+        .stApp {{
+            background: {WARNA_BG_LUAR} !important;
+        }}
+        
+        /* 2. Bekas Kad Borang Log Masuk */
+        .login-card-container {{
+            background-color: {WARNA_KAD_FORM} !important;
+            padding: 35px 30px;
+            border-radius: 15px;
+            box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.45);
+            margin-top: 25px;
+        }}
+        
+        /* 3. Paksa Warna Tulisan Label (Username & Password) Sentiasa Jelas */
+        div[data-testid="stTextInput"] label,
+        div[data-testid="stTextInput"] label p {{
+            color: {WARNA_TEKS_LABEL} !important;
+            font-size: 14px !important;
+            font-weight: 700 !important;
+        }}
+        
+        /* 4. Kotak Ruang Menaip (Input Field) */
+        div[data-testid="stTextInput"] input {{
+            color: {WARNA_INPUT_TEKS} !important;
+            background-color: {WARNA_INPUT_BG} !important;
+            border: 1.5px solid {WARNA_BORDER_INPUT} !important;
+            border-radius: 8px !important;
+            font-size: 14px !important;
+        }}
+        
+        /* 5. Warna Kotak Semasa Klik (Focus) */
+        div[data-testid="stTextInput"] input:focus {{
+            border-color: #1E4C2B !important;
+            box-shadow: 0 0 8px rgba(30, 76, 43, 0.3) !important;
+        }}
+
+        /* 6. Butang Log Masuk Utama */
+        div[data-testid="stButton"] button[kind="primary"] {{
+            background-color: #1E4C2B !important;
+            color: #ffffff !important;
+            border-radius: 8px !important;
+            font-weight: bold !important;
+            border: none !important;
+        }}
+        div[data-testid="stButton"] button[kind="primary"]:hover {{
+            background-color: #14341E !important;
+        }}
         </style>
     """, unsafe_allow_html=True)
     
-    col1, col2, col3 = st.columns([1, 1.2, 1])
+    col1, col2, col3 = st.columns([1, 1.25, 1])
     with col2:
-        st.markdown('<div class="login-box">', unsafe_allow_html=True)
-        st.markdown("<h1 style='color: #1E4C2B; margin-bottom: 0;'>🕌</h1>", unsafe_allow_html=True)
-        st.markdown(f"<h2 style='color: #1E4C2B; margin-top: 5px;'>{get_nama_surau().upper()}</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #666; font-size: 13px;'>Sistem Perakaunan & Integriti Tunai Komuniti (Versi Web)</p>", unsafe_allow_html=True)
-        st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
+        st.markdown('<div class="login-card-container">', unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center; color: #1E4C2B; margin-bottom: 0;'>🕌</h1>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style='text-align: center; color: #1E4C2B; margin-top: 5px; font-weight: 800;'>{get_nama_surau().upper()}</h3>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #555555; font-size: 13px; margin-bottom: 20px;'>Sistem Perakaunan & Integriti Tunai Komuniti</p>", unsafe_allow_html=True)
+        st.markdown("<hr style='border: 0; border-top: 1px solid #e0e0e0; margin-bottom: 20px;'>", unsafe_allow_html=True)
         
-        username = st.text_input("Nama Pengguna (Username)", placeholder="Contoh: admin / bendahari")
-        password = st.text_input("Kata Laluan (Password)", type="password", placeholder="••••••••")
+        username = st.text_input("Nama Pengguna (Username)", placeholder="Masukkan username...")
+        password = st.text_input("Kata Laluan (Password)", type="password", placeholder="Masukkan kata laluan...")
         
+        st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
         if st.button("🔓 LOG MASUK SEKARANG", use_container_width=True, type="primary"):
             if username and password:
                 conn = get_db_connection()
@@ -305,9 +355,8 @@ def login_page():
             else:
                 st.warning("Sila masukkan username dan kata laluan.")
                 
-        st.markdown("<br><p style='font-size: 11px; color: #888;'>Akaun Lalai Sistem:<br><b>admin</b> (admin123) | <b>bendahari</b> (benda123) | <b>pengerusi</b> (pengerusi123)</p>", unsafe_allow_html=True)
+        st.markdown("<br><p style='font-size: 11px; color: #777777; text-align: center;'>Akaun Lalai: <b>admin</b> (admin123) | <b>bendahari</b> (benda123) | <b>pengerusi</b> (pengerusi123)</p>", unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
-
 # =========================================================================
 # HALAMAN UTAMA (MAIN APP)
 # =========================================================================
