@@ -315,9 +315,9 @@ def login_page():
     col1, col2, col3 = st.columns([1, 1.25, 1])
     with col2:
         st.markdown('<div class="login-card-container">', unsafe_allow_html=True)
-        st.markdown("<h1 style='text-align: center; color: #1E4C2B; margin-bottom: 0;'>🕌</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center; color: #D4AF37; margin-bottom: 0;'>🕌</h1>", unsafe_allow_html=True)
         st.markdown(f"<h3 style='text-align: center; color: #D4AF37; margin-top: 5px; font-weight: 800;'>{get_nama_surau().upper()}</h3>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #555555; font-size: 13px; margin-bottom: 20px;'>Sistem Perakaunan & Integriti Tunai Komuniti</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #D4AF37; font-size: 13px; margin-bottom: 20px;'>Sistem Perakaunan & Integriti Tunai Komuniti</p>", unsafe_allow_html=True)
         st.markdown("<hr style='border: 0; border-top: 1px solid #e0e0e0; margin-bottom: 20px;'>", unsafe_allow_html=True)
         
         username = st.text_input("Nama Pengguna (Username)", placeholder="Masukkan username...")
