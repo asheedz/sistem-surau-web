@@ -422,8 +422,8 @@ def login_page():
                 else:
                     st.warning("Sila masukkan username dan kata laluan.")
                     
-        st.markdown("<p style='font-size: 11px; color: #777777; text-align: center; margin-top: 15px;'>Akaun Lalai: <b>admin</b> (admin123) | <b>bendahari</b> (benda123) | <b>pengerusi</b> (pengerusi123)</p>", unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+       # st.markdown("<p style='font-size: 11px; color: #777777; text-align: center; margin-top: 15px;'>Akaun Lalai: <b>admin</b> (admin123) | <b>bendahari</b> (benda123) | <b>pengerusi</b> (pengerusi123)</p>", unsafe_allow_html=True)
+       # st.markdown('</div>', unsafe_allow_html=True)
 
         # FUNGSI MEMASUKKAN GAMBAR CUSTOM DI MUKA DEPAN
         #with st.expander("🖼️ Tetapan Gambar Latar Belakang Muka Depan"):
