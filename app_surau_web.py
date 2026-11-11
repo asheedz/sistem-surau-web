@@ -378,9 +378,9 @@ def login_page():
     col_spacer_l, col_main, col_spacer_r = st.columns([0.6, 1.4, 0.6])
     with col_main:
         st.markdown('<div class="login-card-container">', unsafe_allow_html=True)
-        st.markdown("<h1 style='text-align: center; color: #D4AF37; margin: 0; font-size: 42px;'>🕌</h1>", unsafe_allow_html=True)
-        st.markdown(f"<h3 style='text-align: center; color: #1E4C2B; margin-top: 5px; margin-bottom: 2px; font-weight: 800; font-size: clamp(18px, 4vw, 22px);'>{get_nama_surau().upper()}</h3>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #555555; font-size: 13px; margin-bottom: 18px;'>Sistem Pengurusan Kewangan Surau</p>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center; color: #ffffff; margin: 0; font-size: 42px;'>🕌</h1>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style='text-align: center; color: #ffffff; margin-top: 5px; margin-bottom: 2px; font-weight: 800; font-size: clamp(18px, 4vw, 22px);'>{get_nama_surau().upper()}</h3>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #ffffff; font-size: 13px; margin-bottom: 18px;'>Sistem Pengurusan Kewangan Surau</p>", unsafe_allow_html=True)
         st.markdown("<hr style='border: 0; border-top: 1px solid #e2e8e2; margin-bottom: 18px;'>", unsafe_allow_html=True)
         
         # PENGGUNAAN st.form: MEMASTIKAN TEKAN 'ENTER' AKAN TERUS SUBMIT BORANG
@@ -426,26 +426,26 @@ def login_page():
         st.markdown('</div>', unsafe_allow_html=True)
 
         # FUNGSI MEMASUKKAN GAMBAR CUSTOM DI MUKA DEPAN
-        with st.expander("🖼️ Tetapan Gambar Latar Belakang Muka Depan"):
-            st.caption("Muat naik gambar surau/masjid pilihan anda untuk menghiasi skrin log masuk:")
-            uploaded_file = st.file_uploader("Pilih Fail Gambar (JPG/PNG)", type=["jpg", "jpeg", "png", "webp"], key="login_screen_bg_uploader")
+        #with st.expander("🖼️ Tetapan Gambar Latar Belakang Muka Depan"):
+          #  st.caption("Muat naik gambar surau/masjid pilihan anda untuk menghiasi skrin log masuk:")
+           # uploaded_file = st.file_uploader("Pilih Fail Gambar (JPG/PNG)", type=["jpg", "jpeg", "png", "webp"], key="login_screen_bg_uploader")
             
-            col_b1, col_b2 = st.columns(2)
-            if uploaded_file is not None:
-                if col_b1.button("💾 Gunakan Gambar Ini", use_container_width=True, type="primary"):
-                    bytes_data = uploaded_file.read()
-                    base64_str = base64.b64encode(bytes_data).decode('utf-8')
-                    mime = uploaded_file.type
-                    data_uri = f"data:{mime};base64,{base64_str}"
-                    set_bg_image(data_uri)
-                    st.success("Gambar latar berjaya disimpan!")
-                    st.rerun()
+           # col_b1, col_b2 = st.columns(2)
+            #if uploaded_file is not None:
+              #  if col_b1.button("💾 Gunakan Gambar Ini", use_container_width=True, type="primary"):
+                 #   bytes_data = uploaded_file.read()
+                 #   base64_str = base64.b64encode(bytes_data).decode('utf-8')
+                  #  mime = uploaded_file.type
+                  #  data_uri = f"data:{mime};base64,{base64_str}"
+                  #  set_bg_image(data_uri)
+                  #  st.success("Gambar latar berjaya disimpan!")
+                   # st.rerun()
                     
-            if custom_bg:
-                if col_b2.button("🔄 Set Semula Asal", use_container_width=True):
-                    set_bg_image(None)
-                    st.success("Gambar latar berjaya diset semula kepada asal!")
-                    st.rerun()
+          #  if custom_bg:
+               # if col_b2.button("🔄 Set Semula Asal", use_container_width=True):
+                 #   set_bg_image(None)
+                 #   st.success("Gambar latar berjaya diset semula kepada asal!")
+                  #  st.rerun() 
 
 # =========================================================================
 # HALAMAN UTAMA (MAIN APP DENGAN SUSUN ATUR RESPONSIF)
