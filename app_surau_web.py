@@ -339,7 +339,7 @@ def login_page():
         /* 5. Warna Teks Label & Borang */
         div[data-testid="stTextInput"] label,
         div[data-testid="stTextInput"] label p {{
-            color: #1E4C2B !important;
+            color: #ffffff !important;
             font-size: 13.5px !important;
             font-weight: 700 !important;
             margin-bottom: 2px !important;
