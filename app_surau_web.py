@@ -343,6 +343,7 @@ def login_page():
     WARNA_INPUT_TEKS = "#000000"
     WARNA_BORDER_INPUT = "#c2d1c5"
 
+    nama_surau = get_nama_surau()
     bg_path, bg_overlay = get_bg_settings()
     bg_css = f"background: {WARNA_BG_LUAR} !important;"
     
@@ -413,5 +414,106 @@ def login_page():
         div[data-testid="stButton"] button[kind="primary"] {{
             background-color: #1E4C2B !important;
             color: #ffffff !important;
+            border: none !important;
             border-radius: 8px !important;
-            font-weight: bold
+            font-weight: bold !important;
+            font-size: 16px !important;
+            padding: 10px 16px !important;
+            margin-top: 10px !important;
+            transition: all 0.2s ease-in-out !important;
+        }}
+        div[data-testid="stFormSubmitButton"] button:hover {{
+            background-color: #14341E !important;
+            box-shadow: 0 4px 12px rgba(30, 76, 43, 0.4) !important;
+        }}
+        </style>
+    """, unsafe_allow_html=True)
+
+    # Susun atur tengah yang responsif (desktop & telefon pintar)
+    col_kiri, col_tengah, col_kanan = st.columns([1, 1.3, 1])
+
+    with col_tengah:
+        # Gunakan st.form supaya menekan kekunci ENTER terus menghantar borang
+        with st.form("borang_log_masuk", clear_on_submit=False):
+            st.markdown(f"""
+                <div style="text-align: center; margin-bottom: 18px;">
+                    <div style="font-size: 46px; line-height: 1.1;">🕌</div>
+                    <h2 style="color: #1E4C2B; margin: 8px 0 4px 0; font-weight: 800;">
+                        Sistem Kewangan Surau
+                    </h2>
+                    <p style="color: #3d5a45; font-size: 15px; font-weight: 600; margin: 0;">
+                        {nama_surau}
+                    </p>
+                </div>
+            """, unsafe_allow_html=True)
+
+            username = st.text_input(
+                "Nama Pengguna (Username)",
+                placeholder="Masukkan username anda..."
+            )
+            password = st.text_input(
+                "Kata Laluan (Password)",
+                type="password",
+                placeholder="Masukkan kata laluan & tekan Enter..."
+            )
+
+            # st.form_submit_button bertindak balas secara automatik apabila kekunci ENTER ditekan
+            submit_login = st.form_submit_button(
+                "🔐 Log Masuk",
+                type="primary",
+                use_container_width=True
+            )
+
+            if submit_login:
+                if not username.strip() or not password:
+                    st.warning("⚠️ Sila masukkan Nama Pengguna dan Kata Laluan.")
+                else:
+                    conn = get_db_connection()
+                    c = conn.cursor()
+                    c.execute(
+                        "SELECT id, username, password_hash, nama_penuh, no_telefon, peranan, status FROM users WHERE username = ?",
+                        (username.strip(),)
+                    )
+                    user = c.fetchone()
+                    conn.close()
+
+                    if user and user[2] == hash_password(password):
+                        if user[6] != 'Aktif':
+                            st.error("🚫 Akaun anda telah dinyahaktifkan. Sila hubungi Admin.")
+                            log_audit(username.strip(), "LOG MASUK GAGAL", "Percubaan log masuk akaun tidak aktif")
+                        else:
+                            st.session_state['logged_in'] = True
+                            st.session_state['user_info'] = {
+                                'id': user[0],
+                                'username': user[1],
+                                'nama_penuh': user[3],
+                                'no_telefon': user[4],
+                                'peranan': user[5]
+                            }
+                            log_audit(user[1], "LOG MASUK", f"Log masuk berjaya ({user[5]})")
+                            st.rerun()
+                    else:
+                        st.error("❌ Nama Pengguna atau Kata Laluan tidak sah.")
+                        log_audit(username.strip(), "LOG MASUK GAGAL", "Kata laluan atau username salah")
+
+    # Sokongan tambahan JS: pastikan kekunci Enter sentiasa mencetuskan klik butang submit
+    components.html("""
+        <script>
+        const doc = window.parent.document;
+        doc.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const active = doc.activeElement;
+                if (active && active.tagName === 'INPUT') {
+                    const form = active.closest('[data-testid="stForm"]');
+                    if (form) {
+                        const submitBtn = form.querySelector('[data-testid="stFormSubmitButton"] button');
+                        if (submitBtn) {
+                            e.preventDefault();
+                            submitBtn.click();
+                        }
+                    }
+                }
+            }
+        });
+        </script>
+    """, height=0, width=0)
