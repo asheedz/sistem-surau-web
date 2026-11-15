@@ -1808,8 +1808,9 @@ def main_app():
         st.subheader("🛡️ Panel Pentadbiran & Kawalan Keselamatan")
         conn = get_db_connection()
         
-        adm_t1, adm_t2, adm_t3, adm_t4, adm_t5, adm_t6 = st.tabs([
-            "👥 Pengurusan Pengguna & Status", 
+        adm_t1, adm_t_pwd, adm_t2, adm_t3, adm_t4, adm_t5, adm_t6 = st.tabs([
+            "👥 Pengurusan Pengguna & Status",
+            "🔑 Reset Kata Laluan",
             "👔 Jawatan & Hak Akses", 
             "📅 Tutup/Buka Tahun", 
             "💾 Sandaran & Pulih (Backup)", 
@@ -1817,12 +1818,47 @@ def main_app():
             "🕌 Profil & Nama Surau"
         ])
         
+        # Sub 1: Pengurusan Pengguna & Status
         with adm_t1:
             st.markdown("##### Senarai Pengguna & Status Keahlian")
             df_u = pd.read_sql_query("SELECT id, username, nama_penuh, no_telefon, peranan, status FROM users ORDER BY id ASC", conn)
             df_u['Status Keahlian'] = df_u['status'].apply(lambda s: "🟢 Aktif" if s == "Aktif" else "🔴 Tidak Aktif")
             st.dataframe(df_u[['id', 'username', 'nama_penuh', 'no_telefon', 'peranan', 'Status Keahlian']], use_container_width=True, hide_index=True)
             
+            col_pu1, col_pu2 = st.columns([1, 3])
+            if col_pu1.button("🖨️ Cetak Senarai Pengguna"):
+                c = conn.cursor()
+                c.execute("SELECT u.id, u.username, u.nama_penuh, u.no_telefon, u.peranan, j.boleh_ubah_data, u.status FROM users u LEFT JOIN jawatan j ON u.peranan = j.nama_jawatan ORDER BY u.id ASC")
+                u_rows = c.fetchall()
+                tbl_rows = "".join([f"<tr><td>{i+1}</td><td>{r[1]}</td><td><strong>{r[2]}</strong></td><td>{r[3] or '-'}</td><td>{r[4]}</td><td>{'Boleh Ubah Data' if (r[4]=='Admin' or r[5]==1) else ('Pengesah Baucar' if r[4] in ['Pengerusi', 'Timbalan Pengerusi'] else 'View Only')}</td><td>{r[6]}</td></tr>" for i, r in enumerate(u_rows)])
+                
+                html_users = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Senarai Pengguna & Pegawai</title>
+    <style>
+        body {{ font-family: 'Segoe UI', Arial, sans-serif; padding: 25px; }}
+        table {{ width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }}
+        th, td {{ border: 1px solid #333; padding: 8px 10px; }}
+        th {{ background: #1E4C2B; color: white; }}
+        @media print {{ .btn {{ display: none; }} }}
+    </style>
+</head>
+<body>
+    <button class="btn" onclick="window.print()" style="background:#1E4C2B;color:#fff;padding:8px 16px;border:none;cursor:pointer;border-radius:4px;margin-bottom:15px;font-weight:bold;">🖨️ Cetak / Simpan PDF</button>
+    <h2 style="color:#1E4C2B;text-align:center;margin-bottom:3px;">{nama_surau}</h2>
+    <h3 style="text-align:center;margin-top:0;">SENARAI PEGAWAI & PENGGUNA SISTEM KEWANGAN SURAU</h3>
+    <div style="font-size:12px;margin-bottom:10px;">Tarikh Cetakan: {datetime.now().strftime("%d/%m/%Y %H:%M")}</div>
+    <table>
+        <tr><th>Bil</th><th>Username</th><th>Nama Penuh Pegawai</th><th>No. Telefon</th><th>Jawatan / Peranan</th><th>Kuasa Akses Data</th><th>Status Keahlian</th></tr>
+        {tbl_rows}
+    </table>
+    <script>window.print();</script>
+</body>
+</html>"""
+                show_printable_html(html_users, "Senarai_Pengguna.html")
+
             with st.expander("➕ Tambah Pengguna Baharu"):
                 with st.form("form_add_user", clear_on_submit=True):
                     cu1, cu2 = st.columns(2)
@@ -1880,6 +1916,51 @@ def main_app():
                         if e_u2.form_submit_button("❌ Batal / Reset", use_container_width=True):
                             pass
 
+        # Sub 2: Reset Kata Laluan Pengguna (Mengikut ID)
+        with adm_t_pwd:
+            st.markdown("##### 🔑 Reset / Kemaskini Kata Laluan Pengguna (Mengikut ID)")
+            st.caption("Pilih ID pengguna daripada senarai di bawah untuk menetapkan kata laluan baharu.")
+            
+            df_u_pwd = pd.read_sql_query("SELECT id, username, nama_penuh, peranan, status FROM users ORDER BY id ASC", conn)
+            if not df_u_pwd.empty:
+                st.dataframe(
+                    df_u_pwd.rename(columns={
+                        'id': 'ID',
+                        'username': 'Username',
+                        'nama_penuh': 'Nama Penuh',
+                        'peranan': 'Jawatan',
+                        'status': 'Status'
+                    }),
+                    use_container_width=True,
+                    hide_index=True
+                )
+                
+                u_pwd_map = {f"ID #{r['id']} - {r['username']} ({r['nama_penuh']} | {r['peranan']})": r for _, r in df_u_pwd.iterrows()}
+                pilih_pwd_user = st.selectbox("Pilih ID Pengguna:", list(u_pwd_map.keys()), key="sel_pwd_panel")
+                u_pwd_target = u_pwd_map[pilih_pwd_user]
+                
+                with st.form("form_reset_pwd_panel", clear_on_submit=True):
+                    st.info(f"Menetapkan kata laluan baharu bagi **ID #{u_pwd_target['id']}** — Username: `{u_pwd_target['username']}` ({u_pwd_target['nama_penuh']})")
+                    cpw1, cpw2 = st.columns(2)
+                    new_pwd_input = cpw1.text_input("Kata Laluan Baharu (min. 4 aksara):", type="password")
+                    confirm_pwd_input = cpw2.text_input("Sahkan Kata Laluan Baharu:", type="password")
+                    
+                    rp_b1, rp_b2 = st.columns(2)
+                    if rp_b1.form_submit_button("💾 Simpan Kata Laluan Baharu", type="primary", use_container_width=True):
+                        if not new_pwd_input or len(new_pwd_input.strip()) < 4:
+                            st.warning("Kata laluan mestilah sekurang-kurangnya 4 aksara.")
+                        elif new_pwd_input.strip() != confirm_pwd_input.strip():
+                            st.error("Pengesahan kata laluan tidak sepadan! Sila masukkan semula.")
+                        else:
+                            c = conn.cursor()
+                            c.execute("UPDATE users SET password_hash = ? WHERE id = ?", (hash_password(new_pwd_input.strip()), int(u_pwd_target['id'])))
+                            conn.commit()
+                            log_audit(user["nama_penuh"], "RESET KATA LALUAN", f"Kata laluan bagi ID #{u_pwd_target['id']} ('{u_pwd_target['username']}') telah dikemaskini oleh Admin.")
+                            st.success(f"✅ Kata laluan bagi ID #{u_pwd_target['id']} ('{u_pwd_target['username']}') berjaya dikemaskini!")
+                    if rp_b2.form_submit_button("❌ Batal / Reset", use_container_width=True):
+                        pass
+
+        # Sub 3: Jawatan & Hak Akses
         with adm_t2:
             st.markdown("##### Pengurusan Jawatan & Bidang Kuasa Dinamik")
             df_j = pd.read_sql_query("SELECT id, nama_jawatan, boleh_ubah_data, keterangan FROM jawatan ORDER BY id ASC", conn)
@@ -1940,6 +2021,7 @@ def main_app():
                         if ej_b2.form_submit_button("❌ Batal / Reset", use_container_width=True):
                             pass
 
+        # Sub 4: Tutup/Buka Tahun
         with adm_t3:
             st.markdown("##### Kawalan Penutupan Tahun Kewangan")
             df_thn = pd.read_sql_query("SELECT tahun, status, ditutup_oleh, ditutup_pada FROM tahun_kewangan ORDER BY tahun DESC", conn)
@@ -1962,6 +2044,7 @@ def main_app():
                 conn.commit()
                 st.rerun()
 
+        # Sub 5: Sandaran & Pulih (Backup)
         with adm_t4:
             st.markdown("##### 💾 Sandaran & Pemulihan Pangkalan Data (.db)")
             if os.path.exists('sistem_surau.db'):
@@ -1980,6 +2063,7 @@ def main_app():
                     st.success("Pangkalan data berjaya dipulihkan!")
                     st.rerun()
 
+        # Sub 6: Statistik Database
         with adm_t5:
             st.markdown("##### 🗄️ Statistik Fail Pangkalan Data SQLite3")
             db_size = os.path.getsize('sistem_surau.db') / 1024 if os.path.exists('sistem_surau.db') else 0
@@ -2006,6 +2090,7 @@ def main_app():
                 log_audit(user["nama_penuh"], "VACUUM DB", "Database dioptimumkan via Web.")
                 st.success("Pangkalan data telah dioptimumkan!")
         
+        # Sub 7: Profil & Nama Surau
         with adm_t6:
             st.markdown("##### 🕌 Kemaskini Maklumat & Nama Rasmi Surau")
             c = conn.cursor()
