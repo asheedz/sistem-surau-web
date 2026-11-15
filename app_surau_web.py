@@ -658,7 +658,8 @@ def login_page():
                 "<br><p style='font-size: 11px; color: #666666; text-align: center;'>"
                 "Akaun hanya boleh dicapai oleh : <b>Pentadbir</b>  | <b>Pengerusi</b> <br>"
                 "<b>Timbalan</b> | <b>Bendahari &</b> | <b>Auditor</b>"
-                "<b>Sistem Pengurusan Kewangan Surau. Dibangunkan oleh Al Rasit Enterprise © Tahun 2026</b>"
+                "<b>Sistem Pengurusan Kewangan Surau </b>" 
+                "<b>Dibangunkan oleh Al Rasit Enterprise © Tahun 2026</b>"
                 "</p>",
                 unsafe_allow_html=True
             )
