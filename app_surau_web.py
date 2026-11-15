@@ -655,10 +655,10 @@ def login_page():
                     st.warning("Sila masukkan username dan kata laluan.")
                     
             st.markdown(
-                "<br><p style='font-size: 11px; color: #666666; text-align: center;'>"
-                "Akaun Lalai: <b>admin</b> (admin123) | <b>bendahari</b> (benda123)<br>"
-                "<b>pengerusi</b> (pengerusi123) | <b>timbalan</b> (timbalan123)"
-                "</p>",
+                #"<br><p style='font-size: 11px; color: #666666; text-align: center;'>"
+                #"Akaun Lalai: <b>admin</b> (admin123) | <b>bendahari</b> (benda123)<br>"
+                #"<b>pengerusi</b> (pengerusi123) | <b>timbalan</b> (timbalan123)"
+                #"</p>",
                 unsafe_allow_html=True
             )
 
