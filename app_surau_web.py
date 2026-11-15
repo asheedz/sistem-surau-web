@@ -296,6 +296,16 @@ if 'view_voucher_id' not in st.session_state:
     st.session_state['view_voucher_id'] = None
 if 'selected_pv_id' not in st.session_state:
     st.session_state['selected_pv_id'] = None
+if 'pv_form_nonce' not in st.session_state:
+    st.session_state['pv_form_nonce'] = 0
+if 'trx_form_nonce' not in st.session_state:
+    st.session_state['trx_form_nonce'] = 0
+if 'kat_edit_nonce' not in st.session_state:
+    st.session_state['kat_edit_nonce'] = 0
+if 'pv_success_msg' not in st.session_state:
+    st.session_state['pv_success_msg'] = None
+if 'trx_success_msg' not in st.session_state:
+    st.session_state['trx_success_msg'] = None
 
 # =========================================================================
 # FUNGSI BANTUAN PAPARAN CETAKAN & PENJANA PDF TULEN
@@ -869,32 +879,37 @@ def main_app():
         ])
 
         # -----------------------------------------------------------------
-        # TAB 2: KELUARKAN BAUCAR BAHARU
+        # TAB 2: KELUARKAN BAUCAR BAHARU (DENGAN AUTO-RESET & BUTANG BATAL)
         # -----------------------------------------------------------------
         with pv_tab2:
             if not user['can_modify']:
                 st.warning("Peranan anda adalah 'Paparan Sahaja'. Hanya Bendahari atau pegawai dengan kuasa ubah data boleh mengeluarkan baucar bayaran baharu.")
             else:
+                if st.session_state.get('pv_success_msg'):
+                    st.success(st.session_state['pv_success_msg'])
+                    st.session_state['pv_success_msg'] = None
+
+                nonce = st.session_state['pv_form_nonce']
                 st.markdown("##### Borang Pengeluaran Baucar Bayaran Baharu")
                 col_pv1, col_pv2, col_pv3 = st.columns(3)
-                pv_tarikh = col_pv1.date_input("Tarikh Baucar", datetime.now(), key="pv_new_tarikh")
+                pv_tarikh = col_pv1.date_input("Tarikh Baucar", datetime.now(), key=f"pv_new_tarikh_{nonce}")
                 next_serial = jana_no_baucar_seterusnya(pv_tarikh.strftime("%Y"))
-                col_pv2.text_input("No. Siri Baucar (Auto Running Serial)", value=next_serial, disabled=True, help="Dijana secara automatik oleh sistem.")
+                col_pv2.text_input("No. Siri Baucar (Auto Running Serial)", value=next_serial, disabled=True, key=f"pv_new_serial_{nonce}", help="Dijana secara automatik oleh sistem.")
                 
                 df_kat_keluar = pd.read_sql_query("SELECT nama FROM kategori WHERE jenis LIKE '%Keluar%' ORDER BY nama ASC", conn)
                 kat_keluar_opts = df_kat_keluar['nama'].tolist() if not df_kat_keluar.empty else ["Lain-lain Perbelanjaan"]
-                pv_kategori = col_pv3.selectbox("Kategori Perbelanjaan", kat_keluar_opts, key="pv_new_kat")
+                pv_kategori = col_pv3.selectbox("Kategori Perbelanjaan", kat_keluar_opts, key=f"pv_new_kat_{nonce}")
 
                 col_pv4, col_pv5, col_pv6 = st.columns([2, 1.2, 1.2])
-                pv_penerima = col_pv4.text_input("Dibayar Kepada (Nama Penerima / Syarikat) *", placeholder="cth: Tenaga Nasional Berhad / Ustaz Ahmad", key="pv_new_penerima")
-                pv_rujukan = col_pv5.text_input("No. Rujukan / Bil / Invois", placeholder="cth: INV-2026-089", key="pv_new_rujukan")
-                pv_kaedah = col_pv6.selectbox("Kaedah Bayaran", ["Tunai", "Pindahan Bank (Online)", "Cek"], key="pv_new_kaedah")
+                pv_penerima = col_pv4.text_input("Dibayar Kepada (Nama Penerima / Syarikat) *", placeholder="cth: Tenaga Nasional Berhad / Ustaz Ahmad", key=f"pv_new_penerima_{nonce}")
+                pv_rujukan = col_pv5.text_input("No. Rujukan / Bil / Invois", placeholder="cth: INV-2026-089", key=f"pv_new_rujukan_{nonce}")
+                pv_kaedah = col_pv6.selectbox("Kaedah Bayaran", ["Tunai", "Pindahan Bank (Online)", "Cek"], key=f"pv_new_kaedah_{nonce}")
 
-                pv_butiran = st.text_area("Maksud / Butiran Pembayaran *", placeholder="Nyatakan tujuan pembayaran secara terperinci...", height=80, key="pv_new_butiran")
-                pv_amaun = st.number_input("Jumlah Bayaran Dipohon (RM) *", min_value=0.0, step=10.0, format="%.2f", key="pv_new_amaun")
+                pv_butiran = st.text_area("Maksud / Butiran Pembayaran *", placeholder="Nyatakan tujuan pembayaran secara terperinci...", height=80, key=f"pv_new_butiran_{nonce}")
+                pv_amaun = st.number_input("Jumlah Bayaran Dipohon (RM) *", min_value=0.0, step=10.0, format="%.2f", key=f"pv_new_amaun_{nonce}")
 
                 btn_c1, btn_c2 = st.columns([1, 1])
-                if btn_c1.button("🧾 Jana & Hantar Baucar untuk Pengesahan", type="primary", key="btn_create_pv", use_container_width=True):
+                if btn_c1.button("🧾 Jana & Hantar Baucar untuk Pengesahan", type="primary", key=f"btn_create_pv_{nonce}", use_container_width=True):
                     if not pv_penerima.strip():
                         st.error("Sila masukkan nama penerima bayaran!")
                     elif not pv_butiran.strip():
@@ -927,19 +942,12 @@ def main_app():
 
                             if inserted:
                                 log_audit(user['nama_penuh'], "KELUAR BAUCAR BAYARAN", f"{serial_final} | Penerima: {pv_penerima.strip()} | RM{pv_amaun:,.2f} (Menunggu Kelulusan)")
-                                st.success(f"✅ Baucar Bayaran **{serial_final}** berjaya dikeluarkan dan dihantar untuk pengesahan!")
-                                # Reset borang secara automatik selepas simpan
-                                st.session_state['pv_new_penerima'] = ""
-                                st.session_state['pv_new_rujukan'] = ""
-                                st.session_state['pv_new_butiran'] = ""
-                                st.session_state['pv_new_amaun'] = 0.0
+                                st.session_state['pv_success_msg'] = f"✅ Baucar Bayaran **{serial_final}** berjaya dikeluarkan dan dihantar untuk pengesahan!"
+                                st.session_state['pv_form_nonce'] += 1
                                 st.rerun()
 
-                if btn_c2.button("❌ Batal / Kosongkan Borang", key="btn_batal_pv_new", use_container_width=True):
-                    st.session_state['pv_new_penerima'] = ""
-                    st.session_state['pv_new_rujukan'] = ""
-                    st.session_state['pv_new_butiran'] = ""
-                    st.session_state['pv_new_amaun'] = 0.0
+                if btn_c2.button("❌ Batal / Kosongkan Borang", key=f"btn_batal_pv_new_{nonce}", use_container_width=True):
+                    st.session_state['pv_form_nonce'] += 1
                     st.rerun()
 
         # -----------------------------------------------------------------
@@ -1109,7 +1117,7 @@ def main_app():
                                 st.success(f"✅ Transaksi bagi **{pv_dict['no_baucar']}** berjaya direkodkan ke dalam Lejar Urusniaga!")
                                 st.rerun()
 
-                    # D. KAWALAN EDIT BAUCAR (Toggle State based Navigation - Ganti Expander Statik)
+                    # D. KAWALAN EDIT BAUCAR (DENGAN BUTANG BATAL / CANCEL)
                     
                     # Kes 1: Edit sebelum kelulusan
                     if pv_dict['status'] == 'Menunggu Kelulusan' and user['can_modify']:
@@ -1152,7 +1160,7 @@ def main_app():
                                     st.session_state[edit_draft_key] = False
                                     st.rerun()
 
-                                if c_btn2.button("❌ Batal / Tutup Borang", key=f"btn_cancel_draft_pv_{chosen_pv_id}", use_container_width=True):
+                                if c_btn2.button("❌ Batal / Cancel", key=f"btn_cancel_draft_pv_{chosen_pv_id}", use_container_width=True):
                                     st.session_state[edit_draft_key] = False
                                     st.rerun()
 
@@ -1189,7 +1197,7 @@ def main_app():
                                             st.success("Permohonan kebenaran edit telah dihantar kepada Pengerusi / Timbalan Pengerusi!")
                                             st.session_state[req_edit_key] = False
                                             st.rerun()
-                                    if r_b2.button("❌ Batal Permohonan", key=f"btn_cancel_req_edit_{chosen_pv_id}", use_container_width=True):
+                                    if r_b2.button("❌ Batal / Cancel", key=f"btn_cancel_req_edit_{chosen_pv_id}", use_container_width=True):
                                         st.session_state[req_edit_key] = False
                                         st.rerun()
 
@@ -1279,7 +1287,7 @@ def main_app():
                                         st.session_state[edit_app_key] = False
                                         st.rerun()
 
-                                    if e_btn2.button("❌ Batal / Tutup Borang", key=f"btn_cancel_approved_edit_{chosen_pv_id}", use_container_width=True):
+                                    if e_btn2.button("❌ Batal / Cancel", key=f"btn_cancel_approved_edit_{chosen_pv_id}", use_container_width=True):
                                         st.session_state[edit_app_key] = False
                                         st.rerun()
 
@@ -1297,20 +1305,25 @@ def main_app():
             if not user['can_modify']:
                 st.warning("Peranan anda adalah 'Paparan Sahaja'. Hanya pegawai dengan kuasa ubah data dibenarkan menambah urusniaga.")
             else:
+                if st.session_state.get('trx_success_msg'):
+                    st.success(st.session_state['trx_success_msg'])
+                    st.session_state['trx_success_msg'] = None
+
+                t_nonce = st.session_state['trx_form_nonce']
                 st.info("💡 **Nota Kawalan Perbelanjaan:** Bagi pengeluaran wang yang memerlukan kelulusan, sila keluarkan **Baucar Bayaran (PV)** di menu **🧾 Baucar Bayaran (PV)** terlebih dahulu.")
                 c1, c2, c3 = st.columns(3)
-                t_tarikh = c1.date_input("Tarikh Urusniaga", datetime.now(), key="t_tarikh_input")
-                t_jenis = c2.selectbox("Jenis Urusniaga", ["Penerimaan (Masuk)", "Perbelanjaan (Keluar)"], key="t_jenis_input")
+                t_tarikh = c1.date_input("Tarikh Urusniaga", datetime.now(), key=f"t_tarikh_input_{t_nonce}")
+                t_jenis = c2.selectbox("Jenis Urusniaga", ["Penerimaan (Masuk)", "Perbelanjaan (Keluar)"], key=f"t_jenis_input_{t_nonce}")
                 
                 df_kat = pd.read_sql_query("SELECT nama FROM kategori WHERE jenis = ? ORDER BY nama ASC", conn, params=(t_jenis,))
                 kategori_opts = df_kat['nama'].tolist() if not df_kat.empty else ["Lain-lain"]
-                t_kat = c3.selectbox("Kategori Urusniaga", kategori_opts, key="t_kat_input")
+                t_kat = c3.selectbox("Kategori Urusniaga", kategori_opts, key=f"t_kat_input_{t_nonce}")
                 
-                t_butiran = st.text_input("Butiran / Keterangan Urusniaga", key="t_butiran_input")
-                t_amaun = st.number_input("Amaun (RM)", min_value=0.0, step=10.0, format="%.2f", key="t_amaun_input")
+                t_butiran = st.text_input("Butiran / Keterangan Urusniaga", key=f"t_butiran_input_{t_nonce}")
+                t_amaun = st.number_input("Amaun (RM)", min_value=0.0, step=10.0, format="%.2f", key=f"t_amaun_input_{t_nonce}")
                 
                 bt_col1, bt_col2 = st.columns(2)
-                if bt_col1.button("➕ Simpan Rekod Urusniaga", type="primary", key="btn_simpan_trx", use_container_width=True):
+                if bt_col1.button("➕ Simpan Rekod Urusniaga", type="primary", key=f"btn_simpan_trx_{t_nonce}", use_container_width=True):
                     if not t_butiran.strip():
                         st.error("Sila masukkan butiran urusniaga!")
                     elif t_amaun <= 0:
@@ -1330,15 +1343,12 @@ def main_app():
                                       (t_tarikh.strftime("%Y-%m-%d"), bln_thn, t_jenis, t_kat, t_butiran.strip(), t_amaun, user['nama_penuh'], datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
                             conn.commit()
                             log_audit(user["nama_penuh"], "TAMBAH TRANSAKSI", f"{t_jenis} | RM{t_amaun:,.2f} | {t_kat} | {t_butiran}")
-                            st.success("Urusniaga berjaya direkodkan!")
-                            # Auto-reset text dan amaun
-                            st.session_state['t_butiran_input'] = ""
-                            st.session_state['t_amaun_input'] = 0.0
+                            st.session_state['trx_success_msg'] = "Urusniaga berjaya direkodkan!"
+                            st.session_state['trx_form_nonce'] += 1
                             st.rerun()
 
-                if bt_col2.button("❌ Batal / Kosongkan Borang", key="btn_batal_trx_baru", use_container_width=True):
-                    st.session_state['t_butiran_input'] = ""
-                    st.session_state['t_amaun_input'] = 0.0
+                if bt_col2.button("❌ Batal / Kosongkan Borang", key=f"btn_batal_trx_baru_{t_nonce}", use_container_width=True):
+                    st.session_state['trx_form_nonce'] += 1
                     st.rerun()
 
         # Modal Edit Transaksi
@@ -1381,7 +1391,7 @@ def main_app():
                             st.session_state['edit_trx_id'] = None
                             st.success("Transaksi berjaya dikemaskini!")
                             st.rerun()
-                    if ce_btn2.button("❌ Batal Kemaskini", key=f"btn_cancel_edit_{trx_id}", use_container_width=True):
+                    if ce_btn2.button("❌ Batal / Cancel", key=f"btn_cancel_edit_{trx_id}", use_container_width=True):
                         st.session_state['edit_trx_id'] = None
                         st.rerun()
 
@@ -1411,7 +1421,7 @@ def main_app():
                                 st.rerun()
                         else:
                             st.error("Perkataan tidak sepadan! Pemadaman dibatalkan.")
-                    if cd_b2.button("❌ Batal Pemadaman", use_container_width=True):
+                    if cd_b2.button("❌ Batal / Cancel", use_container_width=True):
                         st.session_state['delete_trx_id'] = None
                         st.rerun()
 
@@ -1681,8 +1691,8 @@ def main_app():
                     k_nama = c2.text_input("Nama Kategori Baharu")
                     
                     fc1, fc2 = st.columns(2)
-                    btn_simpan_k = fc1.form_submit_button("💾 Simpan Kategori", type="primary")
-                    btn_batal_k = fc2.form_submit_button("❌ Batal / Reset")
+                    btn_simpan_k = fc1.form_submit_button("💾 Simpan Kategori", type="primary", use_container_width=True)
+                    btn_batal_k = fc2.form_submit_button("❌ Batal / Reset", use_container_width=True)
                     if btn_simpan_k:
                         if k_nama.strip():
                             try:
@@ -1700,11 +1710,12 @@ def main_app():
             with st.expander("✏️ Kemaskini / Ubah Nama Kategori Sedia Ada"):
                 df_kats_all = pd.read_sql_query("SELECT id, jenis, nama FROM kategori ORDER BY jenis DESC, nama ASC", conn)
                 if not df_kats_all.empty:
+                    k_nonce = st.session_state['kat_edit_nonce']
                     kat_options = {f"[{r['jenis']}] {r['nama']}": (r['id'], r['nama']) for _, r in df_kats_all.iterrows()}
-                    pilih_kat_label = st.selectbox("Pilih Kategori untuk Diubah:", list(kat_options.keys()))
+                    pilih_kat_label = st.selectbox("Pilih Kategori untuk Diubah:", list(kat_options.keys()), key=f"sel_kat_edit_{k_nonce}")
                     
                     kat_id_edit, nama_kat_asal = kat_options[pilih_kat_label]
-                    nama_kat_baru = st.text_input("Nama Baharu Kategori:", value=nama_kat_asal, key="edit_kat_input")
+                    nama_kat_baru = st.text_input("Nama Baharu Kategori:", value=nama_kat_asal, key=f"edit_kat_input_{kat_id_edit}_{k_nonce}")
                     
                     st.caption("ℹ️ Nota: Menukar nama kategori akan mengemas kini semua transaksi lejar terdahulu secara automatik demi integriti data.")
                     
@@ -1719,12 +1730,14 @@ def main_app():
                                 conn.commit()
                                 log_audit(user["nama_penuh"], "KEMASKINI KATEGORI", f"Kategori '{nama_kat_asal}' ditukar ke '{nama_kat_baru.strip()}'")
                                 st.success(f"Kategori '{nama_kat_asal}' berjaya ditukar kepada '{nama_kat_baru.strip()}'!")
+                                st.session_state['kat_edit_nonce'] += 1
                                 st.rerun()
                             except sqlite3.IntegrityError:
                                 st.error("Nama kategori tersebut telah digunakan!")
                         else:
                             st.warning("Sila masukkan nama baharu yang berbeza.")
-                    if b_c2.button("❌ Batal", key="btn_batal_kat", use_container_width=True):
+                    if b_c2.button("❌ Batal / Cancel", key="btn_batal_kat", use_container_width=True):
+                        st.session_state['kat_edit_nonce'] += 1
                         st.rerun()
                             
         st.markdown("#### Senarai Kategori Sedia Ada")
