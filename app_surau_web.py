@@ -967,8 +967,8 @@ def login_page():
                     
             st.markdown(
                 "<br><p style='font-size: 11px; color: #666666; text-align: center;'>"
-                "Akaun Lalai: <b>admin</b> (admin123) | <b>bendahari</b> (benda123)<br>"
-                "<b>pengerusi</b> (pengerusi123) | <b>timbalan</b> (timbalan123)"
+                "Akaun hanya boleh dicapai oleh: <b>admin</b> | <b>bendahari</b> <br>"
+                "<b>pengerusi</b> | <b>timbalan</b> | <b>Auditor</b>"
                 "</p>",
                 unsafe_allow_html=True
             )
