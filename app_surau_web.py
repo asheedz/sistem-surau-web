@@ -969,6 +969,7 @@ def login_page():
                 "<br><p style='font-size: 11px; color: #666666; text-align: center;'>"
                 "Akaun hanya boleh dicapai oleh: <b>admin</b> | <b>bendahari</b> <br>"
                 "<b>pengerusi</b> | <b>timbalan</b> | <b>Auditor</b>"
+                "<br> Sistem Pengurusan Kewangan Musolla oleh ACID 2026 © </br>"
                 "</p>",
                 unsafe_allow_html=True
             )
