@@ -659,7 +659,7 @@ def login_page():
                 #"Akaun Lalai: <b>admin</b> (admin123) | <b>bendahari</b> (benda123)<br>"
                 #"<b>pengerusi</b> (pengerusi123) | <b>timbalan</b> (timbalan123)"
                 #"</p>",
-                unsafe_allow_html=True
+                #unsafe_allow_html=True
             )
 
 # =========================================================================
