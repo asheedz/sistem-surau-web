@@ -1,12 +1,18 @@
 import streamlit as st
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import pandas as pd
 import hashlib
 import os
 import shutil
 import base64
 import streamlit.components.v1 as components
+
+try:
+    from zoneinfo import ZoneInfo
+    ZONA_MASA_MY = ZoneInfo("Asia/Kuala_Lumpur")
+except Exception:
+    ZONA_MASA_MY = timezone(timedelta(hours=8))
 
 # =========================================================================
 # KONFIGURASI LAMAN (PAGE CONFIG)
@@ -23,8 +29,12 @@ UPLOAD_DIR_TUNTUTAN = "lampiran_tuntutan"
 os.makedirs(UPLOAD_DIR_TUNTUTAN, exist_ok=True)
 
 # =========================================================================
-# FUNGSI CRYPTOGRAPHY & DATABASE
+# FUNGSI MASA TEMPATAN (MALAYSIA UTC+8, CRYPTOGRAPHY & DATABASE
 # =========================================================================
+def masa_sekarang():
+    """Mengembalikan tarikh dan masa semasa mengikut waktu tempatan Malaysia (Asia/Kuala Lumpur utc+8)."""
+    return datetime.now(ZONA_MASA_MY)
+
 def hash_password(password):
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
