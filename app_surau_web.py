@@ -29,7 +29,7 @@ UPLOAD_DIR_TUNTUTAN = "lampiran_tuntutan"
 os.makedirs(UPLOAD_DIR_TUNTUTAN, exist_ok=True)
 
 # =========================================================================
-# FUNGSI MASA TEMPATAN (MALAYSIA UTC+8, CRYPTOGRAPHY & DATABASE
+# FUNGSI MASA TEMPATAN (MALAYSIA UTC+8), CRYPTOGRAPHY & DATABASE
 # =========================================================================
 def masa_sekarang():
     """Mengembalikan tarikh dan masa semasa mengikut waktu tempatan Malaysia (Asia/Kuala Lumpur utc+8)."""
