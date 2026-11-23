@@ -14,6 +14,9 @@ try:
 except Exception:
     ZONA_MASA_MY = timezone(timedelta(hours=8))
 
+# Coding Versi 1.0
+# tarikh 23/11/2026
+
 # =========================================================================
 # KONFIGURASI LAMAN (PAGE CONFIG)
 # =========================================================================
