@@ -253,10 +253,11 @@ def init_db():
     conn.commit()
     conn.close()
 
+# diubah pada 23/11/2026 utk betulkan current time
 def log_audit(pengguna, tindakan, butiran):
     conn = get_db_connection()
     c = conn.cursor()
-    kini = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    kini = masa_sekarang().strftime("%Y-%m-%d %H:%M:%S")
     c.execute("INSERT INTO audit_log (tarikh_masa, pengguna, tindakan, butiran) VALUES (?, ?, ?, ?)",
               (kini, pengguna, tindakan, butiran))
     conn.commit()
@@ -327,10 +328,11 @@ def get_baki_dana_semasa():
     conn.close()
     return tot_in, tot_out, (tot_in - tot_out)
 
+# diubah 23/11/2026
 def jana_no_baucar_seterusnya(tahun_str=None):
     """Menjana nombor siri kawalan automatik (Auto Running Serial Number) format PV-YYYY-0001."""
     if not tahun_str:
-        tahun_str = datetime.now().strftime("%Y")
+        tahun_str = masa_sekarang().strftime("%Y")
     conn = get_db_connection()
     c = conn.cursor()
     prefix = f"PV-{tahun_str}-"
@@ -346,11 +348,11 @@ def jana_no_baucar_seterusnya(tahun_str=None):
         except ValueError:
             pass
     return f"{prefix}{max_seq + 1:04d}"
-
+# diubah 23/11/2026
 def jana_no_tuntutan_seterusnya(tahun_str=None):
     """Menjana nombor siri kawalan automatik (Auto Running Serial Number) format TNT-YYYY-0001."""
     if not tahun_str:
-        tahun_str = datetime.now().strftime("%Y")
+        tahun_str = masa_sekarang().strftime("%Y")
     conn = get_db_connection()
     c = conn.cursor()
     prefix = f"TNT-{tahun_str}-"
