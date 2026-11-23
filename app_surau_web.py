@@ -775,7 +775,7 @@ def build_pv_html(pv_data, nama_surau, alamat_surau=""):
         </div>
         <div style="margin-top:25px; font-size:11px; color:#666; border-top:1px solid #eee; padding-top:8px; display:flex; justify-content:space-between;">
             <span>No. Kawalan Siri: {pv_data['no_baucar']}</span>
-            <span>Tarikh Cetakan: {datetime.now().strftime("%d/%m/%Y %H:%M")}</span>
+            <span>Tarikh Cetakan: {masa_sekarang().strftime("%d/%m/%Y %H:%M")}</span>
         </div>
     </div>
 </body>
@@ -887,7 +887,7 @@ def build_tuntutan_html(tnt_data, nama_surau, alamat_surau=""):
         </div>
         <div style="margin-top:25px; font-size:11px; color:#666; border-top:1px solid #eee; padding-top:8px; display:flex; justify-content:space-between;">
             <span>No. Kawalan Siri: {tnt_data['no_tuntutan']}</span>
-            <span>Tarikh Cetakan: {datetime.now().strftime("%d/%m/%Y %H:%M")}</span>
+            <span>Tarikh Cetakan: {masa_sekarang().strftime("%d/%m/%Y %H:%M")}</span>
         </div>
     </div>
 </body>
@@ -1179,7 +1179,7 @@ def main_app():
     <div class="header">
         <h1>{nama_surau}</h1>
         <h3 style="margin:4px 0;">RINGKASAN PAPAN PEMUKA & STATUS KEDUDUKAN KEWANGAN</h3>
-        <div>Mod: {mod} | Tempoh: {period} | Tarikh Cetakan: {datetime.now().strftime("%d/%m/%Y %H:%M")}</div>
+        <div>Mod: {mod} | Tempoh: {period} | Tarikh Cetakan: {masa_sekarang().strftime("%d/%m/%Y %H:%M")}</div>
     </div>
     <div class="cards">
         <div class="card" style="background:#eaf5ea; border:1px solid #274E13;">
@@ -1234,7 +1234,7 @@ def main_app():
                 nonce = st.session_state['pv_form_nonce']
                 st.markdown("##### Borang Pengeluaran Baucar Bayaran Baharu")
                 col_pv1, col_pv2, col_pv3 = st.columns(3)
-                pv_tarikh = col_pv1.date_input("Tarikh Baucar", datetime.now(), key=f"pv_new_tarikh_{nonce}")
+                pv_tarikh = col_pv1.date_input("Tarikh Baucar", masa_sekarang(), key=f"pv_new_tarikh_{nonce}")
                 next_serial = jana_no_baucar_seterusnya(pv_tarikh.strftime("%Y"))
                 col_pv2.text_input("No. Siri Baucar (Auto Running Serial)", value=next_serial, disabled=True, key=f"pv_new_serial_{nonce}", help="Dijana secara automatik oleh sistem.")
                 
@@ -1264,7 +1264,7 @@ def main_app():
                             st.error(f"Tahun kewangan {thn_pv} telah DITUTUP. Baucar baharu tidak boleh dikeluarkan.")
                         else:
                             c = conn.cursor()
-                            kini_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            kini_str = masa_sekarang().strftime("%Y-%m-%d %H:%M:%S")
                             serial_final = jana_no_baucar_seterusnya(thn_pv)
                             inserted = False
                             for _ in range(5):
@@ -1405,7 +1405,7 @@ def main_app():
                             catatan_lulus = st.text_input("Catatan Pengesahan / Kelulusan (Pilihan):", key=f"cat_app_{chosen_pv_id}")
                             ab1, ab2 = st.columns(2)
                             if ab1.button("✅ Sahkan & Luluskan Baucar Ini", type="primary", use_container_width=True, key=f"btn_app_pv_{chosen_pv_id}"):
-                                kini_app = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                kini_app = masa_sekarang().strftime("%Y-%m-%d %H:%M:%S")
                                 c.execute("""UPDATE payment_vouchers SET status = 'Diluluskan', disahkan_oleh = ?, jawatan_pengesah = ?,
                                              disahkan_pada = ?, catatan_pengesah = ? WHERE id = ?""",
                                           (user['nama_penuh'], user['peranan'], kini_app, catatan_lulus.strip(), chosen_pv_id))
@@ -1418,7 +1418,7 @@ def main_app():
                                 if not catatan_lulus.strip():
                                     st.error("Sila masukkan sebab penolakan pada ruangan catatan di atas.")
                                 else:
-                                    kini_rej = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                    kini_rej = masa_sekarang().strftime("%Y-%m-%d %H:%M:%S")
                                     c.execute("""UPDATE payment_vouchers SET status = 'Ditolak', disahkan_oleh = ?, jawatan_pengesah = ?,
                                                  disahkan_pada = ?, catatan_pengesah = ? WHERE id = ?""",
                                               (user['nama_penuh'], user['peranan'], kini_rej, catatan_lulus.strip(), chosen_pv_id))
@@ -1464,7 +1464,7 @@ def main_app():
 
                                 c_btn1, c_btn2 = st.columns(2)
                                 if c_btn1.button("💾 Simpan Kemaskini Draf Baucar", type="primary", key=f"btn_save_draft_pv_{chosen_pv_id}", use_container_width=True):
-                                    kini_ed = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                    kini_ed = masa_sekarang().strftime("%Y-%m-%d %H:%M:%S")
                                     c.execute("""UPDATE payment_vouchers SET tarikh_baucar=?, nama_penerima=?, no_rujukan=?, kategori=?,
                                                  butiran=?, amaun=?, kaedah_bayaran=?, dikemaskini_oleh=?, dikemaskini_pada=? WHERE id=?""",
                                               (ed_tarikh.strftime("%Y-%m-%d"), ed_penerima.strip(), ed_rujukan.strip(), ed_kat,
@@ -1502,7 +1502,7 @@ def main_app():
                                         if not sebab_edit.strip():
                                             st.error("Sila nyatakan sebab pindaan dengan jelas!")
                                         else:
-                                            kini_req = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                            kini_req = masa_sekarang().strftime("%Y-%m-%d %H:%M:%S")
                                             c.execute("""UPDATE payment_vouchers SET status = 'Menunggu Kebenaran Edit',
                                                          sebab_mohon_edit = ?, dimohon_edit_oleh = ?, dimohon_edit_pada = ? WHERE id = ?""",
                                                       (sebab_edit.strip(), user['nama_penuh'], kini_req, chosen_pv_id))
@@ -1524,7 +1524,7 @@ def main_app():
                         if user['can_approve_pv']:
                             ke1, ke2 = st.columns(2)
                             if ke1.button("✅ Beri Kebenaran Edit Baucar", type="primary", use_container_width=True, key=f"btn_grant_edit_{chosen_pv_id}"):
-                                kini_grant = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                kini_grant = masa_sekarang().strftime("%Y-%m-%d %H:%M:%S")
                                 c.execute("""UPDATE payment_vouchers SET status = 'Dibenarkan Edit',
                                              kebenaran_edit_oleh = ?, kebenaran_edit_pada = ? WHERE id = ?""",
                                           (f"{user['nama_penuh']} ({user['peranan']})", kini_grant, chosen_pv_id))
@@ -1574,7 +1574,7 @@ def main_app():
 
                                     e_btn1, e_btn2 = st.columns(2)
                                     if e_btn1.button("💾 Simpan Pindaan & Hantar Semula untuk Pengesahan", type="primary", key=f"btn_save_approved_edit_{chosen_pv_id}", use_container_width=True):
-                                        kini_ep = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                        kini_ep = masa_sekarang().strftime("%Y-%m-%d %H:%M:%S")
                                         c.execute("""UPDATE payment_vouchers SET tarikh_baucar=?, nama_penerima=?, no_rujukan=?, kategori=?,
                                                      butiran=?, amaun=?, kaedah_bayaran=?, status='Menunggu Kelulusan',
                                                      disahkan_oleh=NULL, jawatan_pengesah=NULL, disahkan_pada=NULL,
@@ -1631,10 +1631,10 @@ def main_app():
             st.markdown("##### Borang Permohonan Tuntutan Perbelanjaan (Dana Sendiri)")
             
             c_t1, c_t2, c_t3 = st.columns(3)
-            tnt_tarikh = c_t1.date_input("Tarikh Permohonan Tuntutan", datetime.now(), key=f"tnt_new_tarikh_{t_nonce}")
+            tnt_tarikh = c_t1.date_input("Tarikh Permohonan Tuntutan", masa_sekarang(), key=f"tnt_new_tarikh_{t_nonce}")
             next_tnt_serial = jana_no_tuntutan_seterusnya(tnt_tarikh.strftime("%Y"))
             c_t2.text_input("No. Siri Tuntutan (Auto Serial)", value=next_tnt_serial, disabled=True, key=f"tnt_new_serial_{t_nonce}", help="Dijana automatik oleh sistem untuk kawalan audit.")
-            tnt_tarikh_resit = c_t3.date_input("Tarikh Resit / Pembelian *", datetime.now(), key=f"tnt_new_dt_resit_{t_nonce}")
+            tnt_tarikh_resit = c_t3.date_input("Tarikh Resit / Pembelian *", masa_sekarang(), key=f"tnt_new_dt_resit_{t_nonce}")
 
             c_t4, c_t5, c_t6 = st.columns([1.6, 1.2, 1.2])
             tnt_penuntut = c_t4.text_input("Nama Penuntut (Ahli / AJK) *", value=user['nama_penuh'], key=f"tnt_new_penuntut_{t_nonce}")
@@ -1668,7 +1668,7 @@ def main_app():
                         st.error(f"Tahun kewangan {thn_tnt} telah DITUTUP. Tuntutan baharu tidak boleh dihantar.")
                     else:
                         c = conn.cursor()
-                        kini_tnt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        kini_tnt = masa_sekarang().strftime("%Y-%m-%d %H:%M:%S")
                         serial_tnt_final = jana_no_tuntutan_seterusnya(thn_tnt)
 
                         saved_file_path = None
@@ -1887,7 +1887,7 @@ def main_app():
                             sb_col1, sb_col2, sb_col3 = st.columns(3)
                             
                             if sb_col1.button("✅ Sahkan Dana Mencukupi & Hantar ke Pengerusi", type="primary", use_container_width=True, key=f"btn_ok_dana_{chosen_tnt_id}"):
-                                kini_semak = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                kini_semak = masa_sekarang().strftime("%Y-%m-%d %H:%M:%S")
                                 c.execute("""UPDATE tuntutan SET status = 'Menunggu Kelulusan Pengerusi',
                                              disemak_oleh = ?, disemak_pada = ?, status_dana = 'Dana Mencukupi',
                                              catatan_bendahari = ? WHERE id = ?""",
@@ -1901,7 +1901,7 @@ def main_app():
                                 if not catatan_benda.strip():
                                     st.error("Sila nyatakan sebab penangguhan (Hold) pada ruangan catatan di atas.")
                                 else:
-                                    kini_hold = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                    kini_hold = masa_sekarang().strftime("%Y-%m-%d %H:%M:%S")
                                     c.execute("""UPDATE tuntutan SET status = 'Ditangguhkan (Dana Tidak Cukup)',
                                                  disemak_oleh = ?, disemak_pada = ?, status_dana = 'Dana Tidak Cukup (Hold)',
                                                  catatan_bendahari = ? WHERE id = ?""",
@@ -1915,7 +1915,7 @@ def main_app():
                                 if not catatan_benda.strip():
                                     st.error("Sila masukkan sebab penolakan pada ruangan catatan di atas.")
                                 else:
-                                    kini_rej_b = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                    kini_rej_b = masa_sekarang().strftime("%Y-%m-%d %H:%M:%S")
                                     c.execute("""UPDATE tuntutan SET status = 'Ditolak', disemak_oleh = ?, disemak_pada = ?,
                                                  status_dana = 'Ditolak Semasa Semakan', catatan_bendahari = ? WHERE id = ?""",
                                               (user['nama_penuh'], kini_rej_b, catatan_benda.strip(), chosen_tnt_id))
@@ -1941,7 +1941,7 @@ def main_app():
                                 catatan_lulus_tnt = st.text_input("Catatan Kelulusan / Pengesahan (Pilihan):", key=f"cat_app_tnt_{chosen_tnt_id}")
                                 ap_c1, ap_c2 = st.columns(2)
                                 if ap_c1.button("✅ Sahkan & Luluskan Tuntutan Ini", type="primary", use_container_width=True, key=f"btn_app_tnt_{chosen_tnt_id}"):
-                                    kini_lulus_tnt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                    kini_lulus_tnt = masa_sekarang().strftime("%Y-%m-%d %H:%M:%S")
                                     c.execute("""UPDATE tuntutan SET status = 'Diluluskan', disahkan_oleh = ?, jawatan_pengesah = ?,
                                                  disahkan_pada = ?, catatan_pengesah = ? WHERE id = ?""",
                                               (user['nama_penuh'], user['peranan'], kini_lulus_tnt, catatan_lulus_tnt.strip(), chosen_tnt_id))
@@ -1954,7 +1954,7 @@ def main_app():
                                     if not catatan_lulus_tnt.strip():
                                         st.error("Sila nyatakan sebab penolakan pada ruangan catatan di atas.")
                                     else:
-                                        kini_rej_tnt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                        kini_rej_tnt = masa_sekarang().strftime("%Y-%m-%d %H:%M:%S")
                                         c.execute("""UPDATE tuntutan SET status = 'Ditolak', disahkan_oleh = ?, jawatan_pengesah = ?,
                                                      disahkan_pada = ?, catatan_pengesah = ? WHERE id = ?""",
                                                   (user['nama_penuh'], user['peranan'], kini_rej_tnt, catatan_lulus_tnt.strip(), chosen_tnt_id))
@@ -1969,14 +1969,14 @@ def main_app():
                         st.markdown("##### 💸 Peringkat 3: Salurkan Bayaran Balik, Jana Baucar (PV) & Rekod ke Lejar")
                         st.caption("Tindakan ini akan menjana Baucar Bayaran (PV) rasmi dan merekodkan transaksi keluar ke dalam Lejar Urusniaga secara automatik.")
                         pay_c1, pay_c2 = st.columns([1.2, 2])
-                        tarikh_bayar_tnt = pay_c1.date_input("Tarikh Bayaran Balik", datetime.now(), key=f"dt_pay_tnt_{chosen_tnt_id}")
+                        tarikh_bayar_tnt = pay_c1.date_input("Tarikh Bayaran Balik", masa_sekarang(), key=f"dt_pay_tnt_{chosen_tnt_id}")
                         if pay_c2.button("💸 Sahkan Bayaran Balik, Jana PV & Rekod ke Lejar", type="primary", key=f"btn_pay_tnt_{chosen_tnt_id}"):
                             thn_bayar = tarikh_bayar_tnt.strftime("%Y")
                             bln_bayar = tarikh_bayar_tnt.strftime("%Y-%m")
                             if get_tahun_status(thn_bayar) == 'Tutup' and not user['is_admin']:
                                 st.error(f"Tahun kewangan {thn_bayar} telah DITUTUP.")
                             else:
-                                kini_bayar = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                kini_bayar = masa_sekarang().strftime("%Y-%m-%d %H:%M:%S")
                                 pv_auto_serial = jana_no_baucar_seterusnya(thn_bayar)
                                 butiran_pv_tnt = f"Bayaran Balik Tuntutan [{tnt_dict['no_tuntutan']}]: {tnt_dict['butiran']}"
                                 
@@ -2043,7 +2043,7 @@ def main_app():
 
                                     te_b1, te_b2 = st.columns(2)
                                     if te_b1.button("💾 Simpan Kemaskini Draf Tuntutan", type="primary", key=f"btn_save_ed_tnt_{chosen_tnt_id}", use_container_width=True):
-                                        kini_te = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                        kini_te = masa_sekarang().strftime("%Y-%m-%d %H:%M:%S")
                                         c.execute("""UPDATE tuntutan SET tarikh_resit=?, nama_penuntut=?, no_resit_kedai=?, kategori=?,
                                                      butiran=?, amaun=?, kaedah_bayaran_balik=?, maklumat_akaun_bank=?,
                                                      status='Menunggu Semakan Bendahari', dikemaskini_oleh=?, dikemaskini_pada=? WHERE id=?""",
@@ -2082,7 +2082,7 @@ def main_app():
                                         if not sebab_tnt_edit.strip():
                                             st.error("Sila nyatakan sebab pindaan dengan jelas!")
                                         else:
-                                            kini_req_t = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                            kini_req_t = masa_sekarang().strftime("%Y-%m-%d %H:%M:%S")
                                             c.execute("""UPDATE tuntutan SET status = 'Menunggu Kebenaran Edit',
                                                          sebab_mohon_edit = ?, dimohon_edit_oleh = ?, dimohon_edit_pada = ? WHERE id = ?""",
                                                       (sebab_tnt_edit.strip(), user['nama_penuh'], kini_req_t, chosen_tnt_id))
@@ -2104,7 +2104,7 @@ def main_app():
                         if user['can_approve_pv']:
                             ket1, ket2 = st.columns(2)
                             if ket1.button("✅ Beri Kebenaran Edit Tuntutan", type="primary", use_container_width=True, key=f"btn_grant_tnt_{chosen_tnt_id}"):
-                                kini_gt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                kini_gt = masa_sekarang().strftime("%Y-%m-%d %H:%M:%S")
                                 c.execute("""UPDATE tuntutan SET status = 'Dibenarkan Edit',
                                              kebenaran_edit_oleh = ?, kebenaran_edit_pada = ? WHERE id = ?""",
                                           (f"{user['nama_penuh']} ({user['peranan']})", kini_gt, chosen_tnt_id))
@@ -2154,7 +2154,7 @@ def main_app():
 
                                 tep_b1, tep_b2 = st.columns(2)
                                 if tep_b1.button("💾 Simpan Pindaan & Hantar Semula untuk Semakan", type="primary", key=f"btn_save_app_ed_tnt_{chosen_tnt_id}", use_container_width=True):
-                                    kini_tep = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                    kini_tep = masa_sekarang().strftime("%Y-%m-%d %H:%M:%S")
                                     c.execute("""UPDATE tuntutan SET tarikh_resit=?, nama_penuntut=?, no_resit_kedai=?, kategori=?,
                                                  butiran=?, amaun=?, kaedah_bayaran_balik=?, maklumat_akaun_bank=?,
                                                  status='Menunggu Semakan Bendahari',
@@ -2217,7 +2217,7 @@ def main_app():
                 # =========================================================
                 if t_jenis == "Penerimaan (Masuk)":
                     c1, c2 = st.columns([1, 2])
-                    t_tarikh = c1.date_input("Tarikh Urusniaga", datetime.now(), key=f"t_tarikh_in_{t_nonce}")
+                    t_tarikh = c1.date_input("Tarikh Urusniaga", masa_sekarang(), key=f"t_tarikh_in_{t_nonce}")
                     df_kat = pd.read_sql_query("SELECT nama FROM kategori WHERE jenis = ? ORDER BY nama ASC", conn, params=(t_jenis,))
                     kategori_opts = df_kat['nama'].tolist() if not df_kat.empty else ["Lain-lain Penerimaan"]
                     t_kat = c2.selectbox("Kategori Penerimaan", kategori_opts, key=f"t_kat_in_{t_nonce}")
@@ -2243,7 +2243,7 @@ def main_app():
                                 c.execute("INSERT OR IGNORE INTO tahun_kewangan (tahun, status) VALUES (?, 'Buka')", (thn,))
                                 c.execute("""INSERT INTO urusniaga (tarikh, bulan_tahun, jenis, kategori, butiran, amaun, dicipta_oleh, dicipta_pada)
                                              VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-                                          (t_tarikh.strftime("%Y-%m-%d"), bln_thn, t_jenis, t_kat, t_butiran.strip(), t_amaun, user['nama_penuh'], datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+                                          (t_tarikh.strftime("%Y-%m-%d"), bln_thn, t_jenis, t_kat, t_butiran.strip(), t_amaun, user['nama_penuh'], masa_sekarang().strftime("%Y-%m-%d %H:%M:%S")))
                                 conn.commit()
                                 log_audit(user["nama_penuh"], "TAMBAH TRANSAKSI", f"{t_jenis} | RM{t_amaun:,.2f} | {t_kat} | {t_butiran}")
                                 st.session_state['trx_success_msg'] = "✅ Rekod Penerimaan (Masuk) berjaya disimpan ke dalam Lejar Urusniaga!"
@@ -2357,7 +2357,7 @@ def main_app():
                                 if not chk_pv or chk_pv[0] != 'Diluluskan' or chk_pv[1] is not None:
                                     st.error("Baucar ini telah direkodkan sebelum ini atau statusnya telah berubah. Sila muat semula.")
                                 else:
-                                    kini_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                    kini_str = masa_sekarang().strftime("%Y-%m-%d %H:%M:%S")
                                     amaun_pv = float(pv_sel['amaun'])
                                     c.execute("INSERT OR IGNORE INTO tahun_kewangan (tahun, status) VALUES (?, 'Buka')", (thn,))
                                     c.execute("""INSERT INTO urusniaga (tarikh, bulan_tahun, jenis, kategori, butiran, amaun, no_baucar, dicipta_oleh, dicipta_pada)
@@ -2411,7 +2411,7 @@ def main_app():
                                 st.error(f"Tahun {thn_e} telah ditutup. Hanya Admin dibenarkan membuat pindaan.")
                             else:
                                 c.execute("""UPDATE urusniaga SET tarikh=?, bulan_tahun=?, dikemaskini_oleh=?, dikemaskini_pada=? WHERE id = ?""",
-                                          (e_tarikh.strftime("%Y-%m-%d"), bln_e, user['nama_penuh'], datetime.now().strftime("%Y-%m-%d %H:%M:%S"), trx_id))
+                                          (e_tarikh.strftime("%Y-%m-%d"), bln_e, user['nama_penuh'], masa_sekarang().strftime("%Y-%m-%d %H:%M:%S"), trx_id))
                                 conn.commit()
                                 log_audit(user["nama_penuh"], "KEMASKINI TARIKH TRANSAKSI", f"ID #{trx_id} ({e_no_baucar}) tarikh dikemaskini kepada {e_tarikh.strftime('%Y-%m-%d')}")
                                 st.session_state['edit_trx_id'] = None
@@ -2446,7 +2446,7 @@ def main_app():
                                 c.execute("""UPDATE urusniaga SET tarikh=?, bulan_tahun=?, jenis=?, kategori=?, butiran=?, amaun=?,
                                              dikemaskini_oleh=?, dikemaskini_pada=? WHERE id = ?""",
                                           (e_tarikh.strftime("%Y-%m-%d"), bln_e, e_jenis, e_kat, e_butiran.strip(), e_amaun,
-                                           user['nama_penuh'], datetime.now().strftime("%Y-%m-%d %H:%M:%S"), trx_id))
+                                           user['nama_penuh'], masa_sekarang().strftime("%Y-%m-%d %H:%M:%S"), trx_id))
                                 conn.commit()
                                 log_audit(user["nama_penuh"], "KEMASKINI TRANSAKSI", f"ID #{trx_id} dikemaskini: RM{e_amaun:,.2f}")
                                 st.session_state['edit_trx_id'] = None
@@ -2855,7 +2855,7 @@ def main_app():
     <button class="btn" onclick="window.print()" style="background:#1E4C2B;color:#fff;padding:8px 16px;border:none;cursor:pointer;border-radius:4px;margin-bottom:15px;font-weight:bold;">🖨️ Cetak / Simpan PDF</button>
     <h2 style="color:#1E4C2B;text-align:center;margin-bottom:3px;">{nama_surau}</h2>
     <h3 style="text-align:center;margin-top:0;">CARTA KATEGORI PENERIMAAN (MASUK) & PERBELANJAAN (KELUAR)</h3>
-    <div style="font-size:12px;margin-bottom:10px;">Tarikh Cetakan: {datetime.now().strftime("%d/%m/%Y %H:%M")}</div>
+    <div style="font-size:12px;margin-bottom:10px;">Tarikh Cetakan: {masa_sekarang().strftime("%d/%m/%Y %H:%M")}</div>
     <div style="display:flex; justify-content:space-between; margin-top:20px;">
         <div style="width:48%;">
             <h4 style="color:#274E13;margin-bottom:5px;">1. Kategori Penerimaan (Duit Masuk)</h4>
@@ -2931,7 +2931,7 @@ def main_app():
     <button class="btn" onclick="window.print()" style="background:#1E4C2B;color:#fff;padding:8px 16px;border:none;cursor:pointer;border-radius:4px;margin-bottom:15px;font-weight:bold;">🖨️ Cetak / Simpan PDF</button>
     <h2 style="color:#1E4C2B;text-align:center;margin-bottom:3px;">{nama_surau}</h2>
     <h3 style="text-align:center;margin-top:0;">SENARAI PEGAWAI & PENGGUNA SISTEM KEWANGAN SURAU</h3>
-    <div style="font-size:12px;margin-bottom:10px;">Tarikh Cetakan: {datetime.now().strftime("%d/%m/%Y %H:%M")}</div>
+    <div style="font-size:12px;margin-bottom:10px;">Tarikh Cetakan: {masa_sekarang().strftime("%d/%m/%Y %H:%M")}</div>
     <table>
         <tr><th>Bil</th><th>Username</th><th>Nama Penuh Pegawai</th><th>No. Telefon</th><th>Jawatan / Peranan</th><th>Kuasa Akses Data</th><th>Status Keahlian</th></tr>
         {tbl_rows}
@@ -3108,7 +3108,7 @@ def main_app():
                 c = conn.cursor()
                 if "Tutup" in act_thn:
                     c.execute("UPDATE tahun_kewangan SET status = 'Tutup', ditutup_oleh = ?, ditutup_pada = ? WHERE tahun = ?",
-                              (user['nama_penuh'], datetime.now().strftime("%Y-%m-%d %H:%M:%S"), str(thn_pilih)))
+                              (user['nama_penuh'], masa_sekarang().strftime("%Y-%m-%d %H:%M:%S"), str(thn_pilih)))
                     log_audit(user["nama_penuh"], "TUTUP TAHUN", f"Tahun {thn_pilih} ditutup.")
                     st.success(f"Tahun {thn_pilih} telah DITUTUP.")
                 else:
@@ -3122,14 +3122,14 @@ def main_app():
             st.markdown("##### 💾 Sandaran & Pemulihan Pangkalan Data (.db)")
             if os.path.exists('sistem_surau.db'):
                 with open('sistem_surau.db', 'rb') as f_db:
-                    st.download_button("💾 Muat Turun Fail Sandaran Pangkalan Data (sistem_surau.db)", data=f_db, file_name=f"Backup_Surau_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db", mime="application/x-sqlite3", type="primary")
+                    st.download_button("💾 Muat Turun Fail Sandaran Pangkalan Data (sistem_surau.db)", data=f_db, file_name=f"Backup_Surau_{masa_sekarang().strftime('%Y%m%d_%H%M%S')}.db", mime="application/x-sqlite3", type="primary")
             
             st.markdown("---")
             st.markdown("##### 🔄 Pulihkan Pangkalan Data dari Fail (.db)")
             uploaded_db = st.file_uploader("Pilih fail .db untuk dipulihkan", type=["db", "sqlite", "sqlite3"])
             if uploaded_db is not None:
                 if st.button("⚠️ Sahkan & Pulihkan Database", type="secondary"):
-                    shutil.copy2('sistem_surau.db', f"sistem_surau_pre_restore_{datetime.now().strftime('%Y%m%d_%H%M%S')}.bak")
+                    shutil.copy2('sistem_surau.db', f"sistem_surau_pre_restore_{masa_sekarang().strftime('%Y%m%d_%H%M%S')}.bak")
                     with open('sistem_surau.db', 'wb') as f_dest:
                         f_dest.write(uploaded_db.getbuffer())
                     log_audit(user["nama_penuh"], "PULIHKAN DATABASE", "Database dipulihkan via fail muat naik Web.")
