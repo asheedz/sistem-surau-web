@@ -42,8 +42,12 @@ def hash_password(password):
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
 def get_db_connection():
-    return sqlite3.connect('sistem_surau.db', check_same_thread=False)
-
+    # return sqlite3.connect('sistem_surau.db', check_same_thread=False) <-- ni coding asal
+    def get_db_connection():
+    conn = sqlite3.connect('sistem_surau.db', timeout=30.0, check_same_thread=False)
+    conn.execute("PRAGMA journal_mode=WAL;")
+    return conn
+    
 def init_db():
     conn = get_db_connection()
     c = conn.cursor()
