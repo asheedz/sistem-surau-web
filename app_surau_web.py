@@ -373,7 +373,24 @@ def jana_no_tuntutan_seterusnya(tahun_str=None):
         except ValueError:
             pass
     return f"{prefix}{max_seq + 1:04d}"
+# define utk reset button reset db mula di sini
+def reset_database_kecuali_pengguna(jadual_pengguna="users"):
+    conn = get_db_connection()
+    c = conn.cursor()
 
+    # Dapatkan senarai semua jadual dalam database
+    c.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    semua_jadual = [row[0] for row in c.fetchall()]
+
+    for jadual in semua_jadual:
+        # Padam semua jadual KECUALI jadual pengguna dan jadual sistem SQLite
+        if jadual not in (jadual_pengguna, "sqlite_sequence"):
+            c.execute(f"DELETE FROM {jadual};")
+            if "sqlite_sequence" in semua_jadual:
+                c.execute("DELETE FROM sqlite_sequence WHERE name = ?;", (jadual,))
+
+    conn.commit()
+    conn.close()
 init_db()
 
 # =========================================================================
