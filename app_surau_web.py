@@ -47,7 +47,7 @@ def hash_password(password):
 def get_db_connection():
     conn = sqlite3.connect('sistem_surau.db', timeout=30.0, check_same_thread=False)
     conn.execute("PRAGMA journal_mode=WAL;")
-        return conn
+    return conn
     
 def init_db():
     conn = get_db_connection()
