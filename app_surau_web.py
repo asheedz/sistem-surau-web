@@ -254,11 +254,18 @@ def init_db():
         tindakan TEXT NOT NULL,
         butiran TEXT NOT NULL
     )""")
-    # ditambah pada 27 Nov 2026 utk fungsi menjana semula jadual slps reset kecuali 'users'. line 257 - 275
+    # ditambah pada 27 Nov 2026 utk fungsi menjana semula jadual slps reset kecuali 'users'. line 257 - 306
     def reset_database_kecuali_pengguna(jadual_pengguna="users"):
     conn = get_db_connection()
     c = conn.cursor()
 
+    # 1. Simpan profil surau sedia ada sebelum reset`
+    c.execute("SELECT nama_surau, alamat_surau FROM tetapan WHERE id = 1")
+    row_tetapan = c.fetchone()
+    nama_surau_asal = row_tetapan[0] if row_tetapan and row_tetapan[0] else "Surau An Najdah"
+    alamat_surau_asal = row_tetapan[1] if row_tetapan and row_tetapan[1] else ""
+
+    # 2. Dapatkan senarai semua jadual dalam database
     c.execute("SELECT name FROM sqlite_master WHERE type='table';")
     semua_jadual = [row[0] for row in c.fetchall()]
 
@@ -268,6 +275,28 @@ def init_db():
             if "sqlite_sequence" in semua_jadual:
                 c.execute("DELETE FROM sqlite_sequence WHERE name = ?;", (jadual,))
 
+    conn.commit()
+    conn.close()
+
+    # 3. Jana semula jadual/rekod lalai (jawatan, kategori, tetapan) sambil mengekalkan users
+    init_db()
+
+    # 4. Kembalikan nama & alamat surau asal ke jadual tetapan
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute(
+        "UPDATE tetapan SET nama_surau = ?, alamat_surau = ? WHERE id = 1",
+        (nama_surau_asal, alamat_surau_asal)
+    )
+    conn.commit()
+    conn.close()
+
+    # 5. Padam fail lampiran resit lama dalam folder UPLOAD_DIR_TUNTUTAN
+    if os.path.isdir(UPLOAD_DIR_TUNTUTAN):
+        for nama_fail in os.listdir(UPLOAD_DIR_TUNTUTAN):
+            laluan_fail = os.path.join(UPLOAD_DIR_TUNTUTAN, nama_fail)
+            if os.path.isfile(laluan_fail):
+                os.remove(laluan_fail)
     conn.commit()
     conn.close()
 
@@ -1147,6 +1176,7 @@ def main_app():
         c.execute("SELECT COUNT(*) FROM tuntutan WHERE status = 'Menunggu Kelulusan Pengerusi'")
         cnt_tnt_lulus = c.fetchone()[0] or 0
         conn.close()
+
         
         status_thn = get_tahun_status(tahun_semak)
         if status_thn == 'Tutup':
