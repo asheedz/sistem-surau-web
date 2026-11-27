@@ -41,14 +41,11 @@ def masa_sekarang():
 def hash_password(password):
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
-#def get_db_connection():
-    # return sqlite3.connect('sistem_surau.db', check_same_thread=False) <-- ni coding asal
-    
 def get_db_connection():
     conn = sqlite3.connect('sistem_surau.db', timeout=30.0, check_same_thread=False)
     conn.execute("PRAGMA journal_mode=WAL;")
     return conn
-    
+
 def init_db():
     conn = get_db_connection()
     c = conn.cursor()
@@ -254,54 +251,7 @@ def init_db():
         tindakan TEXT NOT NULL,
         butiran TEXT NOT NULL
     )""")
-    # ditambah pada 27 Nov 2026 utk fungsi menjana semula jadual slps reset kecuali 'users'. line 257 - 306
-    def reset_database_kecuali_pengguna(jadual_pengguna="users"):
-    conn = get_db_connection()
-    c = conn.cursor()
 
-    # 1. Simpan profil surau sedia ada sebelum reset`
-    c.execute("SELECT nama_surau, alamat_surau FROM tetapan WHERE id = 1")
-    row_tetapan = c.fetchone()
-    nama_surau_asal = row_tetapan[0] if row_tetapan and row_tetapan[0] else "Surau An Najdah"
-    alamat_surau_asal = row_tetapan[1] if row_tetapan and row_tetapan[1] else ""
-
-    # 2. Dapatkan senarai semua jadual dalam database
-    c.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    semua_jadual = [row[0] for row in c.fetchall()]
-
-    for jadual in semua_jadual:
-        if jadual not in (jadual_pengguna, "sqlite_sequence"):
-            c.execute(f"DELETE FROM {jadual};")
-            if "sqlite_sequence" in semua_jadual:
-                c.execute("DELETE FROM sqlite_sequence WHERE name = ?;", (jadual,))
-
-    conn.commit()
-    conn.close()
-
-    # 3. Jana semula jadual/rekod lalai (jawatan, kategori, tetapan) sambil mengekalkan users
-    init_db()
-
-    # 4. Kembalikan nama & alamat surau asal ke jadual tetapan
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute(
-        "UPDATE tetapan SET nama_surau = ?, alamat_surau = ? WHERE id = 1",
-        (nama_surau_asal, alamat_surau_asal)
-    )
-    conn.commit()
-    conn.close()
-
-    # 5. Padam fail lampiran resit lama dalam folder UPLOAD_DIR_TUNTUTAN
-    if os.path.isdir(UPLOAD_DIR_TUNTUTAN):
-        for nama_fail in os.listdir(UPLOAD_DIR_TUNTUTAN):
-            laluan_fail = os.path.join(UPLOAD_DIR_TUNTUTAN, nama_fail)
-            if os.path.isfile(laluan_fail):
-                os.remove(laluan_fail)
-    conn.commit()
-    conn.close()
-
-    # Jana semula jadual/rekod lalai (jawatan, kategori, tetapan) sambil mengekalkan users
-    init_db()
     conn.commit()
     conn.close()
 
@@ -400,6 +350,7 @@ def jana_no_baucar_seterusnya(tahun_str=None):
         except ValueError:
             pass
     return f"{prefix}{max_seq + 1:04d}"
+
 # diubah 23/11/2026
 def jana_no_tuntutan_seterusnya(tahun_str=None):
     """Menjana nombor siri kawalan automatik (Auto Running Serial Number) format TNT-YYYY-0001."""
@@ -420,17 +371,23 @@ def jana_no_tuntutan_seterusnya(tahun_str=None):
         except ValueError:
             pass
     return f"{prefix}{max_seq + 1:04d}"
-# define utk reset button reset db mula di sini
+
+# dikemaskini pada 27/11/2026 utk reset kecuali users, kekalkan profil surau & bersihkan lampiran
 def reset_database_kecuali_pengguna(jadual_pengguna="users"):
     conn = get_db_connection()
     c = conn.cursor()
 
-    # Dapatkan senarai semua jadual dalam database
+    # 1. Simpan profil surau sedia ada sebelum reset
+    c.execute("SELECT nama_surau, alamat_surau FROM tetapan WHERE id = 1")
+    row_tetapan = c.fetchone()
+    nama_surau_asal = row_tetapan[0] if row_tetapan and row_tetapan[0] else "Surau An Najdah"
+    alamat_surau_asal = row_tetapan[1] if row_tetapan and row_tetapan[1] else ""
+
+    # 2. Dapatkan senarai semua jadual dalam database
     c.execute("SELECT name FROM sqlite_master WHERE type='table';")
     semua_jadual = [row[0] for row in c.fetchall()]
 
     for jadual in semua_jadual:
-        # Padam semua jadual KECUALI jadual pengguna dan jadual sistem SQLite
         if jadual not in (jadual_pengguna, "sqlite_sequence"):
             c.execute(f"DELETE FROM {jadual};")
             if "sqlite_sequence" in semua_jadual:
@@ -438,6 +395,27 @@ def reset_database_kecuali_pengguna(jadual_pengguna="users"):
 
     conn.commit()
     conn.close()
+
+    # 3. Jana semula jadual/rekod lalai (jawatan, kategori, tetapan) sambil mengekalkan users
+    init_db()
+
+    # 4. Kembalikan nama & alamat surau asal ke jadual tetapan
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute(
+        "UPDATE tetapan SET nama_surau = ?, alamat_surau = ? WHERE id = 1",
+        (nama_surau_asal, alamat_surau_asal)
+    )
+    conn.commit()
+    conn.close()
+
+    # 5. Padam fail lampiran resit lama dalam folder UPLOAD_DIR_TUNTUTAN
+    if os.path.isdir(UPLOAD_DIR_TUNTUTAN):
+        for nama_fail in os.listdir(UPLOAD_DIR_TUNTUTAN):
+            laluan_fail = os.path.join(UPLOAD_DIR_TUNTUTAN, nama_fail)
+            if os.path.isfile(laluan_fail):
+                os.remove(laluan_fail)
+
 init_db()
 
 # =========================================================================
@@ -1177,7 +1155,6 @@ def main_app():
         cnt_tnt_lulus = c.fetchone()[0] or 0
         conn.close()
 
-        
         status_thn = get_tahun_status(tahun_semak)
         if status_thn == 'Tutup':
             c3.error(f"🔒 Tahun Kewangan {tahun_semak} telah DITUTUP")
@@ -2363,7 +2340,6 @@ def main_app():
                         pv_sel = pv_opts_map[sel_pv_lbl]
                         pv_sel_id = int(pv_sel['id'])
 
-                        # Paparan Auto-Fill maklumat daripada Baucar Bayaran yang dipilih
                         c_pv1, c_pv2, c_pv3 = st.columns(3)
                         t_tarikh_pv = c_pv1.date_input(
                             "Tarikh Transaksi / Bayaran Sebenar *",
@@ -2421,7 +2397,6 @@ def main_app():
                                 st.error(f"Tahun kewangan {thn} telah DITUTUP. Rekod baharu tidak boleh ditambah oleh Bendahari.")
                             else:
                                 c = conn.cursor()
-                                # Semak semula status baucar untuk elak rekod berganda
                                 c.execute("SELECT status, urusniaga_id FROM payment_vouchers WHERE id = ?", (pv_sel_id,))
                                 chk_pv = c.fetchone()
                                 if not chk_pv or chk_pv[0] != 'Diluluskan' or chk_pv[1] is not None:
@@ -3230,6 +3205,10 @@ def main_app():
             st.write(f"• **Jumlah Jejak Audit:** {n_aud:,} log")
             
             if st.button("⚡ Optimumkan Pangkalan Data (VACUUM)"):
+                conn.execute("VACUUM")
+                log_audit(user["nama_penuh"], "VACUUM DB", "Database dioptimumkan via Web.")
+                st.success("Pangkalan data telah dioptimumkan!")
+
             st.divider()
             st.markdown("##### 🚨 Zon Bahaya: Set Semula Semua Data Sistem (Kecuali Pengguna)")
             st.warning(
@@ -3250,27 +3229,6 @@ def main_app():
                         "RESET DATABASE",
                         "Semua data sistem (kecuali users & tetapan) diset semula dan fail lampiran dibersihkan."
                     )
-                    st.success("Semua data sistem berjaya diset semula!")
-                    st.rerun()
-                conn.execute("VACUUM")
-                log_audit(user["nama_penuh"], "VACUUM DB", "Database dioptimumkan via Web.")
-                st.success("Pangkalan data telah dioptimumkan!")
-           # baru tambah dari 3206 - 3233
-            st.divider()
-            st.markdown("##### 🚨 Zon Bahaya: Set Semula Semua Data Sistem (Kecuali Pengguna)")
-            st.warning(
-                "Tindakan ini akan memadam semua rekod Urusniaga, Baucar (PV), Tuntutan, "
-                "Tahun Kewangan, dan Log Audit. Akaun pengguna (`users`) akan dikekalkan."
-            )
-            sah_reset = st.checkbox("Saya faham dan ingin memadam semua data sistem ini.", key="chk_sah_reset_db")
-            teks_sah = st.text_input("Taip RESET untuk mengesahkan:", key="txt_sah_reset_db")
-
-            if st.button("🗑️ Reset Semua Data Sistem", type="primary", disabled=not sah_reset, key="btn_reset_semua_data"):
-                if teks_sah.strip().upper() != "RESET":
-                    st.error("Sila taip perkataan RESET pada kotak pengesahan di atas.")
-                else:
-                    reset_database_kecuali_pengguna("users")
-                    log_audit(user["nama_penuh"], "RESET DATABASE", "Semua data sistem (kecuali users) telah diset semula oleh Admin.")
                     st.success("Semua data sistem berjaya diset semula!")
                     st.rerun()
         
