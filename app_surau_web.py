@@ -254,7 +254,25 @@ def init_db():
         tindakan TEXT NOT NULL,
         butiran TEXT NOT NULL
     )""")
+    # ditambah pada 27 Nov 2026 utk fungsi menjana semula jadual slps reset kecuali 'users'. line 257 - 275
+    def reset_database_kecuali_pengguna(jadual_pengguna="users"):
+    conn = get_db_connection()
+    c = conn.cursor()
 
+    c.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    semua_jadual = [row[0] for row in c.fetchall()]
+
+    for jadual in semua_jadual:
+        if jadual not in (jadual_pengguna, "sqlite_sequence"):
+            c.execute(f"DELETE FROM {jadual};")
+            if "sqlite_sequence" in semua_jadual:
+                c.execute("DELETE FROM sqlite_sequence WHERE name = ?;", (jadual,))
+
+    conn.commit()
+    conn.close()
+
+    # Jana semula jadual/rekod lalai (jawatan, kategori, tetapan) sambil mengekalkan users
+    init_db()
     conn.commit()
     conn.close()
 
