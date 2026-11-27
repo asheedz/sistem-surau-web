@@ -3203,6 +3203,24 @@ def main_app():
                 conn.execute("VACUUM")
                 log_audit(user["nama_penuh"], "VACUUM DB", "Database dioptimumkan via Web.")
                 st.success("Pangkalan data telah dioptimumkan!")
+           # baru tambah dari 3206 - 3233
+            st.divider()
+            st.markdown("##### 🚨 Zon Bahaya: Set Semula Semua Data Sistem (Kecuali Pengguna)")
+            st.warning(
+                "Tindakan ini akan memadam semua rekod Urusniaga, Baucar (PV), Tuntutan, "
+                "Tahun Kewangan, dan Log Audit. Akaun pengguna (`users`) akan dikekalkan."
+            )
+            sah_reset = st.checkbox("Saya faham dan ingin memadam semua data sistem ini.", key="chk_sah_reset_db")
+            teks_sah = st.text_input("Taip RESET untuk mengesahkan:", key="txt_sah_reset_db")
+
+            if st.button("🗑️ Reset Semua Data Sistem", type="primary", disabled=not sah_reset, key="btn_reset_semua_data"):
+                if teks_sah.strip().upper() != "RESET":
+                    st.error("Sila taip perkataan RESET pada kotak pengesahan di atas.")
+                else:
+                    reset_database_kecuali_pengguna("users")
+                    log_audit(user["nama_penuh"], "RESET DATABASE", "Semua data sistem (kecuali users) telah diset semula oleh Admin.")
+                    st.success("Semua data sistem berjaya diset semula!")
+                    st.rerun()
         
         with adm_t6:
             st.markdown("##### 🕌 Kemaskini Maklumat & Nama Rasmi Surau")
