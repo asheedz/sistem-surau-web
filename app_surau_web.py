@@ -49,7 +49,7 @@ def get_db_connection():
 def init_db():
     conn = get_db_connection()
     c = conn.cursor()
-    
+
     # 1. Users Table with status
     c.execute("""CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -60,15 +60,15 @@ def init_db():
         peranan TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'Aktif'
     )""")
-    
+
     c.execute("PRAGMA table_info(users)")
     cols = [col[1] for col in c.fetchall()]
     if 'no_telefon' not in cols:
         c.execute("ALTER TABLE users ADD COLUMN no_telefon TEXT")
     if 'status' not in cols:
         c.execute("ALTER TABLE users ADD COLUMN status TEXT NOT NULL DEFAULT 'Aktif'")
-        c.execute("UPDATE users SET status = 'Aktif' WHERE status IS NULL")
-    
+        c.execute("UPDATE users SET status = 'Aktif' WHERE status IS NULL OR TRIM(status) = ''")
+
     # 2. Jawatan Table
     c.execute("""CREATE TABLE IF NOT EXISTS jawatan (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,33 +76,42 @@ def init_db():
         boleh_ubah_data INTEGER NOT NULL DEFAULT 0,
         keterangan TEXT
     )""")
-    
+
     default_roles = [
         ('Admin', 1, 'Akses Penuh Sistem, Pengurusan Pengguna, Jawatan & Database'),
-        ('Bendahari', 1, 'Perekodan Urusniaga Kewangan, Semakan Dana Tuntutan & Baucar Bayaran'),
         ('Pengerusi', 0, 'Pengesahan Baucar & Tuntutan, Kebenaran Pindaan & Semakan Penyata'),
         ('Timbalan Pengerusi', 0, 'Pengesahan Baucar & Tuntutan, Kebenaran Pindaan & Semakan Penyata'),
+        ('Auditor1', 1, 'Mengaudit Urusniaga Kewangan, Semakan Dana Tuntutan & Baucar Bayaran'),
+        ('Auditor2', 1, 'Mengaudit Urusniaga Kewangan, Semakan Dana Tuntutan & Baucar Bayaran'),
+        ('Bendahari', 1, 'Perekodan Urusniaga Kewangan, Semakan Dana Tuntutan & Baucar Bayaran'),
+        ('Timbalan Bendahari', 1, 'Perekodan Urusniaga Kewangan, Semakan Dana Tuntutan & Baucar Bayaran'),
         ('AJK', 0, 'Paparan Sahaja & Permohonan Tuntutan Perbelanjaan')
     ]
     for r_name, r_mod, r_desc in default_roles:
-        c.execute("SELECT id FROM jawatan WHERE nama_jawatan = ?", (r_name,))
-        if not c.fetchone():
-            c.execute("INSERT INTO jawatan (nama_jawatan, boleh_ubah_data, keterangan) VALUES (?, ?, ?)",
-                      (r_name, r_mod, r_desc))
+        c.execute("INSERT OR IGNORE INTO jawatan (nama_jawatan, boleh_ubah_data, keterangan) VALUES (?, ?, ?)",
+                  (r_name, r_mod, r_desc))
 
-    # Seed default users
+    # Seed default users secara selamat
     default_users = [
-        ('admin', 'admin123', 'Pentadbir Sistem Utama', '012-3456789', 'Admin', 'Aktif'),
-        ('bendahari', 'benda123', 'Hj. Ismail (Bendahari)', '013-1122334', 'Bendahari', 'Aktif'),
-        ('pengerusi', 'pengerusi123', 'Dato Hj. Azman (Pengerusi)', '019-8877665', 'Pengerusi', 'Aktif'),
-        ('timbalan', 'timbalan123', 'Hj. Razak (Timbalan Pengerusi)', '016-5544332', 'Timbalan Pengerusi', 'Aktif'),
-        ('ajk1', 'ajk123', 'Ustaz Hamdan (AJK)', '017-9988776', 'AJK', 'Aktif')
+        ('admin', 'admin123', 'Pentadbir Sistem Utama', 'XXX-XXX XXXX', 'Admin', 'Aktif'),
+        ('pengerusi', 'pengerusi123', 'Encik Izzad', 'XXX-XXX XXXX', 'Pengerusi', 'Aktif'),
+        ('timbalan', 'timbalan123', 'Encik Hafifi Halin', 'XXX-XXX XXXX', 'Timbalan Pengerusi', 'Aktif'),
+        ('auditor1', 'audit1123', 'Encik Yasser Rashid', 'XXX-XXX XXXX', 'Auditor', 'Aktif'),
+        ('auditor2', 'audit1123', 'Encik Faiz', 'XXX-XXX XXXX', 'Auditor', 'Aktif'),
+        ('bendahari', 'benda123', 'Encik Taufiq', 'XXX-XXX XXXX', 'Bendahari', 'Aktif'),
+        ('ajk1', 'ajk123', '', 'XXX-XXX XXXX', 'AJK', 'Tidak Aktif')
     ]
     for u_name, u_pass, u_full, u_tel, u_role, u_stat in default_users:
-        c.execute("SELECT id FROM users WHERE username = ?", (u_name,))
+        c.execute("SELECT id FROM users WHERE LOWER(TRIM(username)) = LOWER(?)", (u_name.strip(),))
         if not c.fetchone():
-            c.execute("INSERT INTO users (username, password_hash, nama_penuh, no_telefon, peranan, status) VALUES (?, ?, ?, ?, ?, ?)",
-                      (u_name, hash_password(u_pass), u_full, u_tel, u_role, u_stat))
+            c.execute(
+                """INSERT OR IGNORE INTO users
+                   (username, password_hash, nama_penuh, no_telefon, peranan, status)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
+                (u_name.strip(), hash_password(u_pass), u_full, u_tel, u_role, u_stat)
+            )
+    conn.commit()
+    conn.close()
             
     # 3. Settings Table
     c.execute("""CREATE TABLE IF NOT EXISTS tetapan (
