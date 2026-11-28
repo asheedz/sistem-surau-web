@@ -82,7 +82,6 @@ def init_db():
         ('Pengerusi', 0, 'Pengesahan Baucar & Tuntutan, Kebenaran Pindaan & Semakan Penyata'),
         ('Timbalan Pengerusi', 0, 'Pengesahan Baucar & Tuntutan, Kebenaran Pindaan & Semakan Penyata'),
         ('Auditor1', 1, 'Mengaudit Urusniaga Kewangan, Semakan Dana Tuntutan & Baucar Bayaran'),
-        ('Auditor2', 1, 'Mengaudit Urusniaga Kewangan, Semakan Dana Tuntutan & Baucar Bayaran'),
         ('Bendahari', 1, 'Perekodan Urusniaga Kewangan, Semakan Dana Tuntutan & Baucar Bayaran'),
         ('Timbalan Bendahari', 1, 'Perekodan Urusniaga Kewangan, Semakan Dana Tuntutan & Baucar Bayaran'),
         ('AJK', 0, 'Paparan Sahaja & Permohonan Tuntutan Perbelanjaan')
