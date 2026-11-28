@@ -1,0 +1,80 @@
+--- a/app_surau_web (7).py
++++ b/app_surau_web (7).py
+@@ -573,28 +573,37 @@
+         st.subheader("📊 Papan Pemuka & Ringkasan Aliran Tunai")
+         conn = get_db_connection()
+         
+-        df_months = pd.read_sql_query("SELECT DISTINCT bulan_tahun FROM urusniaga ORDER BY bulan_tahun DESC", conn)
+-        months_list = df_months['bulan_tahun'].tolist() if not df_months.empty else [datetime.now().strftime("%Y-%m")]
++        df_months = pd.read_sql_query(
++            """SELECT DISTINCT COALESCE(NULLIF(TRIM(bulan_tahun), ''), SUBSTR(TRIM(tarikh), 1, 7)) AS bulan_tahun
++               FROM urusniaga
++               WHERE COALESCE(NULLIF(TRIM(bulan_tahun), ''), SUBSTR(TRIM(tarikh), 1, 7)) != ''
++               ORDER BY bulan_tahun DESC""",
++            conn
++        )
++        months_list = df_months['bulan_tahun'].tolist() if not df_months.empty else [masa_sekarang().strftime("%Y-%m")]
+         
+-        df_years = pd.read_sql_query("SELECT DISTINCT SUBSTR(tarikh, 1, 4) as thn FROM urusniaga ORDER BY thn DESC", conn)
+-        years_list = df_years['thn'].tolist() if not df_years.empty else [datetime.now().strftime("%Y")]
++        df_years = pd.read_sql_query(
++            """SELECT DISTINCT SUBSTR(TRIM(tarikh), 1, 4) AS thn
++               FROM urusniaga
++               WHERE TRIM(tarikh) != ''
++               ORDER BY thn DESC""",
++            conn
++        )
++        years_list = df_years['thn'].tolist() if not df_years.empty else [masa_sekarang().strftime("%Y")]
+         
+         c1, c2, c3 = st.columns([1, 1, 2])
+         mod = c1.selectbox("Mod Paparan", ["Bulanan", "Tahunan"])
++
++        amt_expr = "COALESCE(SUM(CAST(REPLACE(TRIM(CAST(amaun AS TEXT)), ',', '') AS REAL)), 0.0)"
+         
+         if mod == "Bulanan":
+             period = c2.selectbox("Pilih Bulan", months_list)
+-            query_in = "SELECT SUM(amaun) FROM urusniaga WHERE bulan_tahun = ? AND jenis LIKE '%Masuk%'"
+-            query_out = "SELECT SUM(amaun) FROM urusniaga WHERE bulan_tahun = ? AND jenis LIKE '%Keluar%'"
+-            query_cat = "SELECT kategori, SUM(amaun) as jumlah FROM urusniaga WHERE bulan_tahun = ? AND jenis LIKE '%Keluar%' GROUP BY kategori ORDER BY jumlah DESC"
++            bln_filter = "COALESCE(NULLIF(TRIM(bulan_tahun), ''), SUBSTR(TRIM(tarikh), 1, 7)) = ?"
++            query_in = f"SELECT {amt_expr} FROM urusniaga WHERE {bln_filter} AND LOWER(TRIM(jenis)) LIKE '%masuk%'"
++            query_out = f"SELECT {amt_expr} FROM urusniaga WHERE {bln_filter} AND LOWER(TRIM(jenis)) LIKE '%keluar%'"
++            query_cat = f"""SELECT TRIM(kategori) AS kategori, {amt_expr} AS jumlah
++                         FROM urusniaga
++                         WHERE {bln_filter} AND LOWER(TRIM(jenis)) LIKE '%keluar%'
++                         GROUP BY TRIM(kategori)
++                         HAVING jumlah > 0
++                         ORDER BY jumlah DESC"""
+             val = (period,)
+             tahun_semak = period[:4]
+         else:
+             period = c2.selectbox("Pilih Tahun", years_list)
+-            query_in = "SELECT SUM(amaun) FROM urusniaga WHERE SUBSTR(tarikh, 1, 4) = ? AND jenis LIKE '%Masuk%'"
+-            query_out = "SELECT SUM(amaun) FROM urusniaga WHERE SUBSTR(tarikh, 1, 4) = ? AND jenis LIKE '%Keluar%'"
+-            query_cat = "SELECT kategori, SUM(amaun) as jumlah FROM urusniaga WHERE SUBSTR(tarikh, 1, 4) = ? AND jenis LIKE '%Keluar%' GROUP BY kategori ORDER BY jumlah DESC"
++            thn_filter = "SUBSTR(TRIM(tarikh), 1, 4) = ?"
++            query_in = f"SELECT {amt_expr} FROM urusniaga WHERE {thn_filter} AND LOWER(TRIM(jenis)) LIKE '%masuk%'"
++            query_out = f"SELECT {amt_expr} FROM urusniaga WHERE {thn_filter} AND LOWER(TRIM(jenis)) LIKE '%keluar%'"
++            query_cat = f"""SELECT TRIM(kategori) AS kategori, {amt_expr} AS jumlah
++                         FROM urusniaga
++                         WHERE {thn_filter} AND LOWER(TRIM(jenis)) LIKE '%keluar%'
++                         GROUP BY TRIM(kategori)
++                         HAVING jumlah > 0
++                         ORDER BY jumlah DESC"""
+             val = (period,)
+             tahun_semak = period
+             
+         c = conn.cursor()
+         c.execute(query_in, val)
+-        tot_in = c.fetchone()[0] or 0.0
++        tot_in = float(c.fetchone()[0] or 0.0)
+         c.execute(query_out, val)
+-        tot_out = c.fetchone()[0] or 0.0
++        tot_out = float(c.fetchone()[0] or 0.0)
+         baki = tot_in - tot_out
+         
+         df_cat = pd.read_sql_query(query_cat, conn, params=val)
++        if not df_cat.empty:
++            df_cat["kategori"] = df_cat["kategori"].fillna("Lain-lain Perbelanjaan")
++            df_cat["jumlah"] = pd.to_numeric(df_cat["jumlah"], errors="coerce").fillna(0.0)
++            df_cat = df_cat[df_cat["jumlah"] > 0]
